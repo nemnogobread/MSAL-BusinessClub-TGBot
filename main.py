@@ -15,41 +15,71 @@ def start_message(message):
                 name varchar(50),
                 surname varchar(50),
                 institute varchar(50),
-                age INTEGER
+                age int
                 )""")
     conn.commit()
     cur.close()
     conn.close()
 
-    markup = types.ReplyKeyboardMarkup()
-    btn1 = types.KeyboardButton('👋 Поздороваться')
-    btn2 = types.KeyboardButton('📲 Зарегестрироваться')
-    btn3 = types.KeyboardButton('👀 Просмотреть пользователей')
-    markup.row(btn1, btn2)
-    markup.row(btn3)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('📲 Зарегестрироваться')
+    btn2 = types.KeyboardButton('👀 Просмотреть пользователей')
+    markup.add(btn1, btn2)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
  
 
 @bot.message_handler(content_types=['text'])
 def func(message):
-    if(message.text == '👋 Поздороваться'):
-        bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА')
-    
-    elif(message.text == '📲 Зарегестрироваться'):
-        bot.send_message(message.chat.id, 'Ой-ой')
-    
-    elif message.text == "👀 Просмотреть пользователей":
-        bot.send_message(message.chat.id, 'Упс, меня пока на это не запрограммировали')
-    
-    elif (message.text == "Вернуться в главное меню"):
-        markup = types.ReplyKeyboardMarkup()
-        btn1 = types.KeyboardButton('👋 Поздороваться')
-        btn2 = types.KeyboardButton('📲 Зарегестрироваться')
-        btn3 = types.KeyboardButton('👀 Просмотреть пользователей')
-        markup.row(btn1, btn2)
-        markup.row(btn3)
-        bot.send_message(message.chat.id, text="Вы вернулись в главное меню", reply_markup=markup)
+    if message.text == '📲 Зарегестрироваться':
+        bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!')
+        bot.send_message(message.chat.id, 'Введите ваше имя')
+        bot.register_next_step_handler(message, fill_user_name)
+
+    elif message.text == '👀 Просмотреть пользователей':
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users')
+        users = cur.fetchall()
+        info = ''
+        for el in users:
+            info += f'{el[1]} {el[2]}, {el[3]}, {el[4]}\n'
+        cur.close()
+        conn.close()
+        bot.send_message(message.chat.id, info)
+        
     else:
-        bot.send_message(message.chat.id, text="На такую комманду я не запрограммирован..")
+        bot.send_message(message.chat.id, 'На такую комманду я не запрограммирован..')
+
+
+def fill_user_name(message):
+    name = message.text.strip()
+    bot.send_message(message.chat.id, 'Введите вашу фамилию')
+    bot.register_next_step_handler(message, fill_user_surname, name)
+
+def fill_user_surname(message, name):
+    surname = message.text.strip()
+    bot.send_message(message.chat.id, 'Введите ваш официальное название вашего ВУЗа, института или колледжа с использованием аббревиатуры')
+    bot.register_next_step_handler(message, fill_user_institute, name, surname)
+
+def fill_user_institute(message, name, surname):
+    institute = message.text.strip()
+    bot.send_message(message.chat.id, 'Введите ваш возраст')
+    bot.register_next_step_handler(message, registration, name, surname, institute)
+
+def registration(message, name, surname, institute):
+    age = int(message.text.strip())
+
+    conn = sqlite3.connect('database.sql')
+    cur = conn.cursor()
+    cur.execute('INSERT INTO users (name, surname, institute, age) VALUES ("%s", "%s", "%s", "%s")' % (name, surname, institute, age))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('👀 Просмотреть пользователей')
+    markup.add(btn1)
+    bot.send_message(message.chat.id, 'Отлично, мы тебя зарегестрировали!', reply_markup=markup)
+
 
 bot.polling(none_stop=True)
