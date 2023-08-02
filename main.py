@@ -13,6 +13,7 @@ def become_admin(message):
 
 def enter_admin_password(message):
     if message.text == 'admin_password':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton('➕ Добвать мероприятие')
         btn2 = types.KeyboardButton('✏️ Изменить мероприятие')
         btn3 = types.KeyboardButton('❌ Удалить мероприятие')
