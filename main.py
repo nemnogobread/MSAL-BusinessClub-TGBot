@@ -61,11 +61,10 @@ def func(message):
         users = cur.fetchall()
         info = ''
         for el in users:
-            if el[5] == message.from_user.id:
-                if el[3] == '':
-                    info += f'{el[1]}, {el[2]}, {el[4]}-й курс\n'
-                else:
-                    info += f'{el[1]}, {el[2]}, {el[3]}, {el[4]}-й курс\n'
+            if el[3] == '':
+                info += f'{el[1]}, {el[2]}, {el[4]}-й курс\n'
+            else:
+                info += f'{el[1]}, {el[2]}, {el[3]}, {el[4]}-й курс\n'
         cur.close()
         conn.close()
         bot.send_message(message.chat.id, info)
