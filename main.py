@@ -111,7 +111,7 @@ def fill_user_institute(message, FIO):
         bot.register_next_step_handler(message, registration, FIO, institute)
 
 def fill_user_faculty(message, FIO, institute):
-    faculty = message.text
+    faculty = message.text.upper()
     bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
     bot.register_next_step_handler(message, registration, FIO, institute, faculty)
 
