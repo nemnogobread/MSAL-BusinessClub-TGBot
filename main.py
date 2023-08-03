@@ -48,7 +48,7 @@ def start_message(message):
 
 @bot.message_handler(content_types=['text'])
 def func(message):
-
+    
     if message.text == '📲 Зарегестрироваться':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
@@ -104,6 +104,7 @@ def fill_user_FIO(message):
     bot.send_message(message.chat.id, 'Введите официальное название вашего ВУЗа, например "МГЮА"')
     bot.register_next_step_handler(message, fill_user_institute, FIO)
 
+
 def fill_user_institute(message, FIO):
     institute = message.text
     if institute.upper() == 'МГЮА':
@@ -113,10 +114,12 @@ def fill_user_institute(message, FIO):
         bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
         bot.register_next_step_handler(message, registration, FIO, institute)
 
+
 def fill_user_faculty(message, FIO, institute):
     faculty = message.text.upper()
     bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
     bot.register_next_step_handler(message, registration, FIO, institute, faculty)
+
 
 def registration(message, FIO, institute, faculty=''):
     try: 
