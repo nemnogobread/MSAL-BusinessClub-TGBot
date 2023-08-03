@@ -30,11 +30,11 @@ def start_message(message):
     cur = conn.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS users (
                 id int auto_increment primary key,
+                chat_id int,
                 FIO varchar(50),
                 institute varchar(50),
                 faculty varchar(50),
-                course int,
-                user_id int
+                course int
                 )""")
     conn.commit()
     cur.close()
@@ -48,6 +48,7 @@ def start_message(message):
 
 @bot.message_handler(content_types=['text'])
 def func(message):
+
     if message.text == '📲 Зарегестрироваться':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
@@ -55,36 +56,28 @@ def func(message):
         bot.register_next_step_handler(message, fill_user_FIO)
 
     elif message.text == '👀 Просмотреть пользователей':
-        conn = sqlite3.connect('database.sql')
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM users')
-        users = cur.fetchall()
+        info_list = get_info(message.from_user.id)
         info = ''
-        for el in users:
-            if el[3] == '':
-                info += f'{el[1]}, {el[2]}, {el[4]}-й курс\n'
+        for el in info_list:
+            if el[4] == '':
+                info += f'{el[2]}, {el[3]}, {el[5]}-й курс\n'
             else:
-                info += f'{el[1]}, {el[2]}, {el[3]}, {el[4]}-й курс\n'
-        cur.close()
-        conn.close()
+                info += f'{el[2]}, {el[3]}, {el[4]}, {el[5]}-й курс\n'
         bot.send_message(message.chat.id, info)
 
     elif message.text == '📋 Просмотреть мои данные':
-        conn = sqlite3.connect('database.sql')
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM users')
-        users = cur.fetchall()
-        info = ''
-        for el in users:
-            if el[5] == message.from_user.id:
-                if el[3] == '':
-                    info += f'{el[1]}, {el[2]}, {el[4]}-й курс\n'
-                else:
-                    info += f'{el[1]}, {el[2]}, {el[3]}, {el[4]}-й курс\n'
-                break
-        cur.close()
-        conn.close()
-        bot.send_message(message.chat.id, info)
+        info_list = get_info(message.from_user.id)
+        if info_list[0][4] == '':
+            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][5]}-й курс'
+        else:
+            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][4]}, {info_list[0][5]}-й курс'
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton('✏️ Изменить данные')
+        markup.add(btn1)
+        bot.send_message(message.chat.id, info, reply_markup=markup)
+
+    elif  message.text == '✏️ Изменить данные':
+        pass
 
     elif message.text == '👀 Просмотреть доступные мероприятия':
         if event == '':
@@ -94,6 +87,16 @@ def func(message):
 
     else:
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
+
+
+def get_info(user_id):
+    conn = sqlite3.connect('database.sql')
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users WHERE id = ?', (user_id, ))
+    info = cur.fetchall()
+    cur.close()
+    conn.close()
+    return info
 
 
 def fill_user_FIO(message):
@@ -116,11 +119,16 @@ def fill_user_faculty(message, FIO, institute):
     bot.register_next_step_handler(message, registration, FIO, institute, faculty)
 
 def registration(message, FIO, institute, faculty=''):
-    course_num = int(message.text)
-
+    try: 
+        course_num = int(message.text)
+    except ValueError:
+        bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
+        bot.register_next_step_handler(message, registration, FIO, institute, faculty)
+        return
+        
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
-    cur.execute('INSERT INTO users (FIO, institute, faculty, course, user_id) VALUES ("%s", "%s", "%s", "%s", "%s")' % (FIO, institute, faculty, course_num, message.from_user.id))
+    cur.execute('INSERT INTO users (id, chat_id, FIO, institute, faculty, course) VALUES ("%s", "%s", "%s", "%s", "%s", "%s")' % (message.from_user.id, message.chat.id, FIO, institute, faculty, course_num))
     conn.commit()
     cur.close()
     conn.close()
