@@ -61,7 +61,7 @@ def func(message):
         bot.register_next_step_handler(message, fill_user_FIO)
 
     elif message.text == '👀 Просмотреть пользователей':
-        info_list = get_all_info(message.from_user.id)
+        info_list = get_all_info()
         info = ''
         for el in info_list:
             if el[4] == '':
@@ -82,6 +82,36 @@ def func(message):
         bot.send_message(message.chat.id, info, reply_markup=markup)
 
     elif  message.text == '✏️ Изменить данные':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton('1. ФИО')
+        btn2 = types.KeyboardButton('2. ВУЗ')
+        btn3 = types.KeyboardButton('3. Институт (факультет)')
+        btn4 = types.KeyboardButton('4. Курс')
+        btn5 = types.KeyboardButton('⬅️ Назад')
+        info_list = get_personal_info(message.from_user.id)
+        if info_list[0][4] == '':
+            markup.add(btn1, btn2, btn4, btn5)
+        else:
+            markup.add(btn1, btn2, btn3, btn4, btn5)
+        bot.send_message(message.chat.id, 'Что именно вы хотите изменить?', reply_markup=markup)
+
+    elif  message.text == '1. ФИО':
+        bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
+        bot.register_next_step_handler(message, change_user_data, 'FIO')
+
+    elif  message.text == '2. ВУЗ':
+        bot.send_message(message.chat.id, 'Введите официальное название вашего ВУЗа, например "МГЮА"')
+        bot.register_next_step_handler(message, change_user_data, 'institute')
+
+    elif  message.text == '3. Институт (факультет)':
+        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+        bot.register_next_step_handler(message, change_user_data, 'faculty')
+
+    elif  message.text == '4. Курс':
+        bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
+        bot.register_next_step_handler(message, change_user_data, 'course')
+
+    elif  message.text == '⬅️ Назад':
         pass
 
     elif message.text == '👀 Просмотреть доступные мероприятия':
@@ -94,7 +124,7 @@ def func(message):
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
 
 
-def get_all_info(user_id):
+def get_all_info():
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
     cur.execute('SELECT * FROM users')
@@ -113,6 +143,33 @@ def get_personal_info(user_id):
     conn.close()
     return info
 
+def change_user_data(message, field):
+    data = message.text
+    if field == 'course':
+        try: 
+            data = int(data)
+        except ValueError:
+            bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
+            bot.register_next_step_handler(message, change_user_data, 'course')
+        return
+
+    conn = sqlite3.connect('database.sql')
+    cur = conn.cursor()
+    cur.execute('UPDETE users SET insitute = {?} WHERE id = {?}', (data, message.from_user.id))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('📲 Зарегестрироваться')
+    btn2 = types.KeyboardButton('📋 Просмотреть мои данные')
+    btn3 = types.KeyboardButton('👀 Просмотреть доступные мероприятия')
+    if get_personal_info(message.from_user.id):
+        markup.add(btn2, btn3)
+    else:
+        markup.add(btn1)
+    bot.send_message(message.chat.id, 'Отлично, ваши данные были изменены', reply_markup=markup)
+
 
 def fill_user_FIO(message):
     FIO = message.text
@@ -124,7 +181,7 @@ def fill_user_institute(message, FIO):
     institute = message.text
     if institute.upper() == 'МГЮА':
         bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
-        bot.register_next_step_handler(message, fill_user_faculty, FIO, institute)
+        bot.register_next_step_handler(message, fill_user_faculty, FIO, institute.upper())
     else:
         bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
         bot.register_next_step_handler(message, registration, FIO, institute)
@@ -156,6 +213,11 @@ def registration(message, FIO, institute, faculty=''):
     btn2 = types.KeyboardButton('👀 Просмотреть доступные мероприятия')
     markup.add(btn1, btn2)
     bot.send_message(message.chat.id, 'Отлично, мы тебя зарегестрировали!', reply_markup=markup)
+
+
+def sql_request_to_change_data(field):
+    if field == 'FIO':
+        return
 
 
 bot.polling(none_stop=True)
