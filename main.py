@@ -6,23 +6,6 @@ event = ''
 
 bot = telebot.TeleBot('6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
 
-@bot.message_handler(commands=['become_admin'])
-def become_admin(message):
-    bot.send_message(message.chat.id, 'Введите пароль')
-    bot.register_next_step_handler(message, enter_admin_password)
-
-def enter_admin_password(message):
-    if message.text == 'admin_password':
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton('➕ Добвать мероприятие')
-        btn2 = types.KeyboardButton('✏️ Изменить мероприятие')
-        btn3 = types.KeyboardButton('❌ Удалить мероприятие')
-        btn4 = types.KeyboardButton('👀 Просмотреть пользователей')
-        markup.add(btn1, btn2, btn3, btn4)
-        bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
-    else:
-        bot.send_message(message.chat.id, f'Пароль неверный')
-
 
 @bot.message_handler(commands=['start', 'hello'])
 def start_message(message):
@@ -49,6 +32,24 @@ def start_message(message):
         markup.add(btn1)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
  
+
+@bot.message_handler(commands=['become_admin'])
+def become_admin(message):
+    bot.send_message(message.chat.id, 'Введите пароль')
+    bot.register_next_step_handler(message, enter_admin_password)
+
+def enter_admin_password(message):
+    if message.text == 'admin_password':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton('➕ Добвать мероприятие')
+        btn2 = types.KeyboardButton('✏️ Изменить мероприятие')
+        btn3 = types.KeyboardButton('❌ Удалить мероприятие')
+        btn4 = types.KeyboardButton('👀 Просмотреть пользователей')
+        markup.add(btn1, btn2, btn3, btn4)
+        bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, f'Пароль неверный')
+
 
 @bot.message_handler(content_types=['text'])
 def func(message):
