@@ -155,7 +155,7 @@ def change_user_data(message, field):
 
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
-    cur.execute('UPDETE users SET insitute = {?} WHERE id = {?}', (data, message.from_user.id))
+    cur.execute('UPDATE users SET institute = ? WHERE id = ?', (data, message.from_user.id))
     conn.commit()
     cur.close()
     conn.close()
