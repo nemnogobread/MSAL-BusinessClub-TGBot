@@ -39,10 +39,14 @@ def start_message(message):
     conn.commit()
     cur.close()
     conn.close()
-
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('📲 Зарегестрироваться')
-    markup.add(btn1)
+    btn2 = types.KeyboardButton('📋 Просмотреть мои данные')
+    btn3 = types.KeyboardButton('👀 Просмотреть доступные мероприятия')
+    if get_personal_info(message.from_user.id):
+        markup.add(btn2, btn3)
+    else:
+        markup.add(btn1)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
  
 
