@@ -85,12 +85,12 @@ def func(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton('1. ФИО')
         btn2 = types.KeyboardButton('2. ВУЗ')
-        btn3 = types.KeyboardButton('3. Институт (факультет)')
-        btn4 = types.KeyboardButton('4. Курс')
+        btn3 = types.KeyboardButton('3. Курс')
+        btn4 = types.KeyboardButton('4. Институт (факультет)')
         btn5 = types.KeyboardButton('⬅️ Назад')
         info_list = get_personal_info(message.from_user.id)
         if info_list[0][4] == '':
-            markup.add(btn1, btn2, btn4, btn5)
+            markup.add(btn1, btn2, btn3, btn5)
         else:
             markup.add(btn1, btn2, btn3, btn4, btn5)
         bot.send_message(message.chat.id, 'Что именно вы хотите изменить?', reply_markup=markup)
@@ -142,6 +142,7 @@ def get_personal_info(user_id):
     cur.close()
     conn.close()
     return info
+
 
 def change_user_data(message, field):
     data = message.text
