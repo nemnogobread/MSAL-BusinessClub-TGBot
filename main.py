@@ -6,7 +6,7 @@ event = ''
 
 bot = telebot.TeleBot('6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
 
-btn1 = types.KeyboardButton('📲 Зарегестрироваться')
+btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Просмотреть мои данные')
 btn3 = types.KeyboardButton('👀 Просмотреть доступные мероприятия')
 btn4 = types.KeyboardButton('➕ Добвать мероприятие')
@@ -67,7 +67,7 @@ def enter_admin_password(message):
 @bot.message_handler(content_types=['text'])
 def func(message):
     
-    if message.text == '📲 Зарегестрироваться':
+    if message.text == '📲 Зарегистрироваться':
         info_list = get_personal_info(message.from_user.id)
         if info_list:
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -78,7 +78,7 @@ def func(message):
                 markup.add(btn2, btn3)
             else:
                 markup.add(btn1)
-            bot.send_message(message.chat.id, 'Вы уже зарегестрированы!', reply_markup=markup)
+            bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
             return
         
         markup = types.ReplyKeyboardRemove()
@@ -252,12 +252,12 @@ def registration(message, FIO, institute, faculty=''):
             markup.add(btn2, btn3)
         else:
             markup.add(btn1)
-        bot.send_message(message.chat.id, 'Вы уже зарегестрированы!', reply_markup=markup)
+        bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
         return
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(btn2, btn3)
-    bot.send_message(message.chat.id, 'Отлично, мы тебя зарегестрировали!', reply_markup=markup)
+    bot.send_message(message.chat.id, 'Отлично, мы тебя зарегистрировали!', reply_markup=markup)
 
 
 def sql_request_to_change_data(field):
