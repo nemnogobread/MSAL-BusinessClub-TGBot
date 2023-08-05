@@ -68,7 +68,21 @@ def enter_admin_password(message):
 def func(message):
     
     if message.text == '📲 Зарегестрироваться':
+        info_list = get_personal_info(message.from_user.id)
+        if info_list:
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            info_list = get_personal_info(message.from_user.id)
+            if info_list and info_list[0][6] == True:
+                markup.add(btn4, btn5, btn6, btn7, btn8)
+            elif get_personal_info(message.from_user.id):
+                markup.add(btn2, btn3)
+            else:
+                markup.add(btn1)
+            bot.send_message(message.chat.id, 'Вы уже зарегестрированы!', reply_markup=markup)
+            return
+        
         markup = types.ReplyKeyboardRemove()
+        
         bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
         bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
         bot.register_next_step_handler(message, fill_user_FIO)
@@ -221,13 +235,25 @@ def registration(message, FIO, institute, faculty=''):
         bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
         bot.register_next_step_handler(message, registration, FIO, institute, faculty)
         return
-        
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
-    cur.execute('INSERT INTO users (id, chat_id, FIO, institute, faculty, course, admin_rights) VALUES ("%s", "%s", "%s", "%s", "%s", "%s", "%s")' % (message.from_user.id, message.chat.id, FIO, institute, faculty, course_num, False))
-    conn.commit()
-    cur.close()
-    conn.close()
+
+    try:        
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        cur.execute('INSERT INTO users (id, chat_id, FIO, institute, faculty, course, admin_rights) VALUES ("%s", "%s", "%s", "%s", "%s", "%s", "%s")' % (message.from_user.id, message.chat.id, FIO, institute, faculty, course_num, False))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except sqlite3.IntegrityError:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        info_list = get_personal_info(message.from_user.id)
+        if info_list and info_list[0][6] == True:
+            markup.add(btn4, btn5, btn6, btn7, btn8)
+        elif get_personal_info(message.from_user.id):
+            markup.add(btn2, btn3)
+        else:
+            markup.add(btn1)
+        bot.send_message(message.chat.id, 'Вы уже зарегестрированы!', reply_markup=markup)
+        return
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(btn2, btn3)
