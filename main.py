@@ -56,7 +56,7 @@ def func(message):
         bot.register_next_step_handler(message, fill_user_FIO)
 
     elif message.text == '👀 Просмотреть пользователей':
-        info_list = get_info(message.from_user.id)
+        info_list = get_all_info(message.from_user.id)
         info = ''
         for el in info_list:
             if el[4] == '':
@@ -66,7 +66,7 @@ def func(message):
         bot.send_message(message.chat.id, info)
 
     elif message.text == '📋 Просмотреть мои данные':
-        info_list = get_info(message.from_user.id)
+        info_list = get_personal_info(message.from_user.id)
         if info_list[0][4] == '':
             info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][5]}-й курс'
         else:
@@ -89,7 +89,17 @@ def func(message):
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
 
 
-def get_info(user_id):
+def get_all_info(user_id):
+    conn = sqlite3.connect('database.sql')
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users')
+    info = cur.fetchall()
+    cur.close()
+    conn.close()
+    return info
+
+
+def get_personal_info(user_id):
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
     cur.execute('SELECT * FROM users WHERE id = ?', (user_id, ))
