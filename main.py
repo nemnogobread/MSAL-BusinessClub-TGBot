@@ -151,11 +151,11 @@ def change_user_data(message, field):
         except ValueError:
             bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
             bot.register_next_step_handler(message, change_user_data, 'course')
-        return
-
+            return
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
-    cur.execute('UPDATE users SET institute = ? WHERE id = ?', (data, message.from_user.id))
+    request = sql_request_to_change_data(field)
+    cur.execute(request, (data, message.from_user.id))
     conn.commit()
     cur.close()
     conn.close()
@@ -217,7 +217,13 @@ def registration(message, FIO, institute, faculty=''):
 
 def sql_request_to_change_data(field):
     if field == 'FIO':
-        return
+        return 'UPDATE users SET FIO = ? WHERE id = ?'
+    elif field == 'institute':
+        return 'UPDATE users SET institute = ? WHERE id = ?'
+    elif field == 'faculty':
+        return 'UPDATE users SET faculty = ? WHERE id = ?'
+    elif field == 'course':
+        return 'UPDATE users SET course = ? WHERE id = ?'
 
 
 bot.polling(none_stop=True)
