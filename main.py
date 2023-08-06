@@ -92,17 +92,17 @@ def func(message):
         info = ''
         for el in info_list:
             if el[4] == '':
-                info += f'{el[2]}, {el[3]}, {el[5]}-й курс, admin: {el[6]}\n'
+                info += f'{el[2]}, {el[3]}, {el[5]}-й курс, admin: {(el[6])}\n'
             else:
-                info += f'{el[2]}, {el[3]}, {el[4]}, {el[5]}-й курс, admin: {el[6]}\n'
+                info += f'{el[2]}, {el[3]}, {el[4]}, {el[5]}-й курс, admin: {(el[6])}\n'
         bot.send_message(message.chat.id, info)
 
     elif message.text == '📋 Просмотреть мои данные':
         info_list = get_personal_info(message.from_user.id)
         if info_list[0][4] == '':
-            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][5]}-й курс\nadmin_rights: {info_list[0][6]}'
+            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][5]}-й курс\nadmin_rights: {bool(info_list[0][6])}'
         else:
-            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][4]}, {info_list[0][5]}-й курс\nadmin_rights: {info_list[0][6]}'
+            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][4]}, {info_list[0][5]}-й курс\nadmin_rights: {bool(info_list[0][6])}'
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn13, btn14)
         bot.send_message(message.chat.id, info, reply_markup=markup)
