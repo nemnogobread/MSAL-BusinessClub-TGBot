@@ -20,6 +20,7 @@ btn11 = types.KeyboardButton('3. Курс')
 btn12 = types.KeyboardButton('4. Институт (факультет)')
 btn13 = types.KeyboardButton('⬅️ Назад')
 btn14 = types.KeyboardButton('✏️ Изменить данные')
+btn15 = types.KeyboardButton('📃 Инфо о клубе')
 
 
 @bot.message_handler(commands=['start', 'hello'])
@@ -51,7 +52,7 @@ def enter_admin_password(message):
     if message.text == 'admin_password':
         change_user_data(message, 'admin_rights', True)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn4, btn5, btn6, btn7, btn8)
+        markup.add(btn4, btn5, btn6, btn7, btn8, btn15)
         bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
     else:
         bot.send_message(message.chat.id, f'Пароль неверный')
