@@ -7,20 +7,19 @@ event = ''
 bot = telebot.TeleBot('6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
-btn2 = types.KeyboardButton('📋 Просмотреть мои данные')
-btn3 = types.KeyboardButton('👀 Просмотреть доступные мероприятия')
-btn4 = types.KeyboardButton('➕ Добвать мероприятие')
-btn5 = types.KeyboardButton('✏️ Изменить мероприятие')
-btn6 = types.KeyboardButton('❌ Удалить мероприятие')
-btn7 = types.KeyboardButton('👀 Просмотреть пользователей')
-btn8 = types.KeyboardButton('📋 Просмотреть мои данные')
+btn2 = types.KeyboardButton('📋 Мои данные')
+btn3 = types.KeyboardButton('👀 Мероприятия')
+btn4 = types.KeyboardButton('➕ Добавить ивент')
+btn5 = types.KeyboardButton('✏️ Изменить ивент')
+btn6 = types.KeyboardButton('❌ Удалить ивент')
+btn7 = types.KeyboardButton('👀 Все пользователи')
 btn9 = types.KeyboardButton('1. ФИО')
-btn10 = types.KeyboardButton('2. ВУЗ')
+btn10 = types.KeyboardButton('2. Вуз')
 btn11 = types.KeyboardButton('3. Курс')
 btn12 = types.KeyboardButton('4. Институт (факультет)')
 btn13 = types.KeyboardButton('⬅️ Назад')
 btn14 = types.KeyboardButton('✏️ Изменить данные')
-btn15 = types.KeyboardButton('📃 Инфо о клубе')
+btn15 = types.KeyboardButton('📃 О клубе')
 
 
 @bot.message_handler(commands=['start', 'hello'])
@@ -52,7 +51,7 @@ def enter_admin_password(message):
     if message.text == 'admin_password':
         change_user_data(message, 'admin_rights', True)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn4, btn5, btn6, btn7, btn8, btn15)
+        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
         bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
     else:
         bot.send_message(message.chat.id, f'Пароль неверный')
@@ -74,22 +73,22 @@ def func(message):
         bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
         bot.register_next_step_handler(message, fill_user_FIO)
 
-    elif message.text == '👀 Просмотреть пользователей':
+    elif message.text == '👀 Все пользователи':
         info_list = get_all_info()
         info = ''
         for el in info_list:
             if el[4] == '':
-                info += f'{el[2]}, {el[3]}, {el[5]}-й курс, admin: {(el[6])}\n'
+                info += f'{el[2]} {el[3]} {el[5]}-й курс\n'
             else:
-                info += f'{el[2]}, {el[3]}, {el[4]}, {el[5]}-й курс, admin: {(el[6])}\n'
+                info += f'{el[2]} {el[3]} {el[4]} {el[5]}-й курс\n'
         bot.send_message(message.chat.id, info)
 
-    elif message.text == '📋 Просмотреть мои данные':
+    elif message.text == '📋 Мои данные':
         info_list = get_personal_info(message.from_user.id)
         if info_list[0][4] == '':
-            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][5]}-й курс\nadmin_rights: {bool(info_list[0][6])}'
+            info = f'{info_list[0][2]}\n{info_list[0][3]} {info_list[0][5]}-й курс'
         else:
-            info = f'ID: {info_list[0][0]}\nchat_ID: {info_list[0][1]}\n{info_list[0][2]}\n{info_list[0][3]}, {info_list[0][4]}, {info_list[0][5]}-й курс\nadmin_rights: {bool(info_list[0][6])}'
+            info = f'{info_list[0][2]}\n{info_list[0][3]} {info_list[0][4]} {info_list[0][5]}-й курс'
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn13, btn14)
         bot.send_message(message.chat.id, info, reply_markup=markup)
@@ -105,19 +104,23 @@ def func(message):
         bot.send_message(message.chat.id, 'Что именно вы хотите изменить?', reply_markup=markup)
 
     elif  message.text == '1. ФИО':
-        bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
+        markup = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)', reply_markup=markup)
         bot.register_next_step_handler(message, change_user_data_from_input, 'FIO')
 
-    elif  message.text == '2. ВУЗ':
-        bot.send_message(message.chat.id, 'Введите официальное название вашего ВУЗа, например "МГЮА"')
+    elif  message.text == '2. Вуз':
+        markup = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, 'Введите официальное название вашего вуза, например "МГЮА"', reply_markup=markup)
         bot.register_next_step_handler(message, change_user_data_from_input, 'institute')
 
     elif  message.text == '3. Курс':
-        bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
+        markup = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент', reply_markup=markup)
         bot.register_next_step_handler(message, change_user_data_from_input, 'course')
 
     elif  message.text == '4. Институт (факультет)':
-        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+        markup = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"', reply_markup=markup)
         bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
 
 
@@ -125,7 +128,14 @@ def func(message):
         markup = main_menu_markup(message)
         bot.send_message(message.chat.id, 'Возвращаемся', reply_markup=markup)
 
-    elif message.text == '👀 Просмотреть доступные мероприятия':
+    elif message.text == '📃 О клубе':
+        club_info = 'Здесь будет полезная информация о бизнес-клубе МГЮА\nНо пока тут только напоминание, что надо выпрямить спину'
+        inline_markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton(text='Наша группа', url = 'https://vk.com/businessclub_msal')
+        inline_markup.add(btn)
+        bot.send_message(message.chat.id, club_info, reply_markup = inline_markup)
+
+    elif message.text == '👀 Мероприятия':
         if event == '':
             bot.send_message(message.chat.id, 'Пока что доступных мероприятий нет\nЯ напишу тебе, как только они появятся!')
         else:
@@ -139,11 +149,11 @@ def main_menu_markup(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     info_list = get_personal_info(message.from_user.id)
     if info_list and info_list[0][6] == True:
-        markup.add(btn4, btn5, btn6, btn7, btn8)
+        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
     elif info_list:
-        markup.add(btn2, btn3)
+        markup.add(btn2, btn3, btn15)
     else:
-        markup.add(btn1)
+        markup.add(btn1, btn15)
     return markup
     
 
@@ -176,9 +186,9 @@ def change_user_data_from_input(message, field):
             bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
             bot.register_next_step_handler(message, change_user_data_from_input, 'course')
             return
-        
-    info = get_personal_info(message.from_user.id)    
+            
     change_user_data(message, field, data)
+    info = get_personal_info(message.from_user.id)
 
     if field == 'institute' and data.upper() == 'МГЮА':
         bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
@@ -205,7 +215,7 @@ def change_user_data(message, field, data):
 
 def fill_user_FIO(message):
     FIO = message.text
-    bot.send_message(message.chat.id, 'Введите официальное название вашего ВУЗа, например "МГЮА"')
+    bot.send_message(message.chat.id, 'Введите официальное название вашего вуза, например "МГЮА"')
     bot.register_next_step_handler(message, fill_user_institute, FIO)
 
 
@@ -247,7 +257,7 @@ def registration(message, FIO, institute, faculty=''):
         return
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(btn2, btn3)
+    markup.add(btn2, btn3, btn15)
     bot.send_message(message.chat.id, 'Отлично, мы тебя зарегистрировали!', reply_markup=markup)
 
 
