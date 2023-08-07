@@ -38,14 +38,7 @@ def start_message(message):
     conn.commit()
     cur.close()
     conn.close()
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    info_list = get_personal_info(message.from_user.id)
-    if info_list and info_list[0][6] == True:
-        markup.add(btn4, btn5, btn6, btn7, btn8)
-    elif get_personal_info(message.from_user.id):
-        markup.add(btn2, btn3)
-    else:
-        markup.add(btn1)
+    markup = main_menu_markup(message)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
  
 
@@ -70,14 +63,7 @@ def func(message):
     if message.text == '📲 Зарегистрироваться':
         info_list = get_personal_info(message.from_user.id)
         if info_list:
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            info_list = get_personal_info(message.from_user.id)
-            if info_list and info_list[0][6] == True:
-                markup.add(btn4, btn5, btn6, btn7, btn8)
-            elif get_personal_info(message.from_user.id):
-                markup.add(btn2, btn3)
-            else:
-                markup.add(btn1)
+            markup = markup = main_menu_markup(message)
             bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
             return
         
@@ -135,14 +121,7 @@ def func(message):
 
 
     elif  message.text == '⬅️ Назад':
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        info_list = get_personal_info(message.from_user.id)
-        if info_list and info_list[0][6] == True:
-            markup.add(btn4, btn5, btn6, btn7, btn8)
-        elif info_list:
-            markup.add(btn2, btn3)
-        else:
-            markup.add(btn1)
+        markup = main_menu_markup(message)
         bot.send_message(message.chat.id, 'Возвращаемся', reply_markup=markup)
 
     elif message.text == '👀 Просмотреть доступные мероприятия':
@@ -154,6 +133,18 @@ def func(message):
     else:
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
 
+
+def main_menu_markup(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    info_list = get_personal_info(message.from_user.id)
+    if info_list and info_list[0][6] == True:
+        markup.add(btn4, btn5, btn6, btn7, btn8)
+    elif info_list:
+        markup.add(btn2, btn3)
+    else:
+        markup.add(btn1)
+    return markup
+    
 
 def get_all_info():
     conn = sqlite3.connect('database.sql')
@@ -184,15 +175,18 @@ def change_user_data_from_input(message, field):
             bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
             bot.register_next_step_handler(message, change_user_data_from_input, 'course')
             return
+        
+    info = get_personal_info(message.from_user.id)    
     change_user_data(message, field, data)
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    info_list = get_personal_info(message.from_user.id)
-    if info_list and info_list[0][6] == True:
-        markup.add(btn4, btn5, btn6, btn7, btn8)
-    elif get_personal_info(message.from_user.id):
-        markup.add(btn2, btn3)
-    else:
-        markup.add(btn1)
+    
+    if field == 'institute' and data.upper() == 'МГЮА':
+        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+        bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
+        return
+    elif field == 'institute' and info[0][3] != 'МГЮА' and info[0][4] != '':
+        change_user_data(message, 'faculty', '')
+
+    markup = main_menu_markup(message)
     bot.send_message(message.chat.id, 'Отлично, ваши данные были изменены', reply_markup=markup)
 
 
@@ -244,14 +238,7 @@ def registration(message, FIO, institute, faculty=''):
         cur.close()
         conn.close()
     except sqlite3.IntegrityError:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        info_list = get_personal_info(message.from_user.id)
-        if info_list and info_list[0][6] == True:
-            markup.add(btn4, btn5, btn6, btn7, btn8)
-        elif get_personal_info(message.from_user.id):
-            markup.add(btn2, btn3)
-        else:
-            markup.add(btn1)
+        markup = main_menu_markup(message)
         bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
         return
 
