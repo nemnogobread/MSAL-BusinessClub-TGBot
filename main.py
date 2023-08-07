@@ -178,7 +178,7 @@ def change_user_data_from_input(message, field):
         
     info = get_personal_info(message.from_user.id)    
     change_user_data(message, field, data)
-    
+
     if field == 'institute' and data.upper() == 'МГЮА':
         bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
         bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
@@ -191,6 +191,8 @@ def change_user_data_from_input(message, field):
 
 
 def change_user_data(message, field, data):
+    if field == 'institute' or field == 'faculty':
+        data = data.upper()
     conn = sqlite3.connect('database.sql')
     cur = conn.cursor()
     request = sql_request_to_change_data(field)
@@ -229,7 +231,8 @@ def registration(message, FIO, institute, faculty=''):
         bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
         bot.register_next_step_handler(message, registration, FIO, institute, faculty)
         return
-
+    institute = institute.upper()
+    faculty = faculty.upper()
     try:        
         conn = sqlite3.connect('database.sql')
         cur = conn.cursor()
