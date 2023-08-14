@@ -2,6 +2,9 @@ import sqlite3
 import telebot
 from telebot import types
 
+#C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/
+#C:/Users/Глеб/Desktop/Учёба/Прога/PythonProject/photo/
+
 events = {}
 event_name = ''
 
@@ -21,9 +24,9 @@ btn12 = types.KeyboardButton('4. Институт (факультет)')
 btn13 = types.KeyboardButton('⬅️ Назад')
 btn14 = types.KeyboardButton('✏️ Изменить данные')
 btn15 = types.KeyboardButton('📃 О клубе')
-btn16 = types.KeyboardButton('🅾️ Нет, изменить текст') 
-btn17 = types.KeyboardButton('🅾️ Нет, изменить фото')
-btn18 = types.KeyboardButton('✅ Да, всё верно')
+btn16 = types.KeyboardButton('🅾️ Изменить текст') 
+btn17 = types.KeyboardButton('🅾️ Изменить фото')
+btn18 = types.KeyboardButton('✅ Да')
 btn19 = types.KeyboardButton('📤 Отправить рассылку')
 btn20 = types.KeyboardButton('⬅️ В меню')
 
@@ -62,7 +65,6 @@ def func(message):
             return
         
         markup = types.ReplyKeyboardRemove()
-        
         bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
         bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
         bot.register_next_step_handler(message, fill_user_FIO)
@@ -117,7 +119,6 @@ def func(message):
         bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"', reply_markup=markup)
         bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
 
-
     elif  message.text == '⬅️ Назад' or message.text == '⬅️ В меню':
         markup = main_menu_markup(message)
         bot.send_message(message.chat.id, 'Возвращаемся', reply_markup=markup)
@@ -133,7 +134,10 @@ def func(message):
         if events == {}:
             bot.send_message(message.chat.id, 'Пока что доступных мероприятий нет\nЯ напишу тебе, как только они появятся!')
         else:
-            pass
+            events_info = 'Вот все доступные мероприятия:\n'
+            for key in events:
+                events_info += key + '\n'
+            bot.send_message(message.chat.id, events_info)
 
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
@@ -158,7 +162,7 @@ def create_table(message, table_name):
     try:
         conn = sqlite3.connect('database.sql')
         cur = conn.cursor()
-        cur.execute(f"""CREATE TABLE IF NOT EXISTS {table_name} (
+        cur.execute(f"""CREATE TABLE IF NOT EXISTS `{table_name}` (
                     id int auto_increment primary key,
                     chat_id int,
                     FIO varchar(50),
@@ -170,8 +174,8 @@ def create_table(message, table_name):
         conn.commit()
         cur.close()
         conn.close()
-    except sqlite3.Error:
-        bot.send_message(message.chat.id, 'Что-то пошло не так при работе с базой данных')
+    except sqlite3.Error as error:
+        bot.send_message(message.chat.id, f'{error}\nЧто-то пошло не так при работе с базой данных')
 
 
 def add_event_name(message):
@@ -187,14 +191,14 @@ def add_event_description(message, event_name):
     event_description = message.text
     events[event_name][0] = event_description
     bot.send_message(message.chat.id, 'Отлично! Теперь добавь постер')
-    bot.register_next_step_handler(message, add_event_picture, event_name)
+    bot.register_next_step_handler(message, add_event_photo, event_name)
 
 
-def add_event_picture(message, event_name):
+def add_event_photo(message, event_name):
     try:
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
-        src = 'C:/Users/Глеб/Desktop/Учёба/Прога/PythonProject/photo/' + message.document.file_name
+        src = 'C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/' + message.document.file_name
         with open(src, 'wb') as new_file:
             new_file.write(downloaded_file)
 
@@ -208,21 +212,22 @@ def add_event_picture(message, event_name):
         bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
         bot.register_next_step_handler(message, change_event, event_name)
     except Exception as error:
-        bot.reply_to(message, error)
+        bot.reply_to(message, f'{error}\nПожалуйста, скиньте постер в виде файла')
+        bot.register_next_step_handler(message, add_event_photo, event_name)
     
 
 def change_event(message, event_name):
-    if message.text == '✅ Да, всё верно':
+    if message.text == '✅ Да':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn19, btn20)
         bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
 
-    elif message.text == '🅾️ Нет, изменить текст':
+    elif message.text == '🅾️ Изменить текст':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Ввидите описание заново', reply_markup=markup)
         bot.register_next_step_handler(message, change_event_description, event_name)
 
-    elif message.text == '🅾️ Нет, изменить фото':
+    elif message.text == '🅾️ Изменить фото':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Пришлите фото заново', reply_markup=markup)
         bot.register_next_step_handler(message, change_event_photo, event_name)
@@ -256,10 +261,9 @@ def change_event_photo(message, event_name):
         markup.add(btn16, btn17, btn18)
         bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
         bot.register_next_step_handler(message, change_event, event_name)
-    except Exception as error:
-        bot.reply_to(message, error)
-
-
+    except Exception:
+        bot.reply_to(message, 'Пожалуйста, скиньте постер в виде файла')
+        bot.register_next_step_handler(message, change_event_photo, event_name)
 
 
 def main_menu_markup(message):
