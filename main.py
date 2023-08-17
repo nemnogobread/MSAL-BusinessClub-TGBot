@@ -35,7 +35,7 @@ btn20 = types.KeyboardButton('⬅️ В меню')
 @bot.message_handler(commands=['start', 'hello'])
 def start_message(message):
     create_table(message, 'users')
-    markup = main_menu_markup(message)
+    markup = main_menu_markup(message.from_user.id)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
  
 
@@ -60,7 +60,7 @@ def func(message):
     if message.text == '📲 Зарегистрироваться':
         info_list = get_personal_info(message.from_user.id)
         if info_list:
-            markup = markup = main_menu_markup(message)
+            markup = markup = main_menu_markup(message.from_user.id)
             bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
             return
         
@@ -120,7 +120,7 @@ def func(message):
         bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
 
     elif  message.text == '⬅️ Назад' or message.text == '⬅️ В меню':
-        markup = main_menu_markup(message)
+        markup = main_menu_markup(message.from_user.id)
         bot.send_message(message.chat.id, 'Возвращаемся', reply_markup=markup)
 
     elif message.text == '📃 О клубе':
@@ -134,10 +134,15 @@ def func(message):
         if events == {}:
             bot.send_message(message.chat.id, 'Пока что доступных мероприятий нет\nЯ напишу тебе, как только они появятся!')
         else:
+            markup = types.InlineKeyboardMarkup()
+            i = 1
             events_info = 'Вот все доступные мероприятия:\n'
             for key in events:
-                events_info += key + '\n'
+                events_info += str(i) + '. ' + key + '\n'
+                markup.add(types.InlineKeyboardButton(text= f'{i}', callback_data = key))
+                i += 1
             bot.send_message(message.chat.id, events_info)
+            bot.send_message(message.chat.id, 'Выберите цифру мероприятия, информацию о котором хотите просмотреть, либо записаться на него', reply_markup=markup)
 
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
@@ -145,17 +150,51 @@ def func(message):
         bot.register_next_step_handler(message, add_event_name)
 
     elif message.text == '📤 Отправить рассылку':
+        inline_markup = types.InlineKeyboardMarkup()
+        inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
         info = get_all_info()
         for el in info:
-            bot.send_message(el[1], 'Тестируется рассылка, не обращайте внимания')
+            bot.send_message(el[1], 'Осторожно ♿♿♿ Глеб ♿♿♿ тестирует ♿♿♿ рассылку ♿♿♿')
             src = events[event_name][1]
             with open(src, 'rb') as photo:
-                bot.send_photo(el[1], photo, caption=events[event_name][0])
-        markup = main_menu_markup(message)
-        bot.send_message(message.chat.id, 'Рассылка отправлена!', reply_markup=markup)
-
+                bot.send_photo(el[1], photo, caption=events[event_name][0], reply_markup=inline_markup)
+        reply_markup = main_menu_markup(message.from_user.id)
+        bot.send_message(message.chat.id, 'Рассылка отправлена!', reply_markup=reply_markup)
     else:
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
+
+
+@bot.callback_query_handler(func=lambda callback: True)
+def callback_message(callback):
+    if callback.data == 'register_on_event_callback':
+        try:
+            global event_name
+            conn = sqlite3.connect('database.sql')
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM users WHERE id = ?', (callback.message.chat.id, ))
+            info = cur.fetchall()[0]
+            cur.execute('INSERT INTO `%s` (id, chat_id, FIO, institute, faculty, course, admin_rights) VALUES (%s, %s, "%s", "%s", "%s", %s, %s)' % (event_name, info[0], info[1], info[2], info[3], info[4], info[5], info[6]))
+            conn.commit()
+            cur.close()
+            conn.close()
+            markup = main_menu_markup(callback.message.chat.id)
+            bot.send_message(callback.message.chat.id, 'Отлично, вы записаны на это мероприятие!', reply_markup=markup)
+        except sqlite3.IntegrityError:
+            markup = main_menu_markup(callback.message.chat.id)
+            bot.send_message(callback.message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
+            return
+        except BaseException as error:
+            markup = main_menu_markup(callback.message.chat.id)
+            bot.send_message(callback.message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
+            return
+    else:
+        inline_markup = types.InlineKeyboardMarkup()
+        inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
+        event_name = callback.data
+        src = events[event_name][1]
+        with open(src, 'rb') as photo:
+            bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
+
 
 
 def create_table(message, table_name):
@@ -176,7 +215,7 @@ def create_table(message, table_name):
         conn.close()
     except sqlite3.Error as error:
         bot.send_message(message.chat.id, f'{error}\nЧто-то пошло не так при работе с базой данных')
-
+        
 
 def add_event_name(message):
     global event_name
@@ -266,9 +305,9 @@ def change_event_photo(message, event_name):
         bot.register_next_step_handler(message, change_event_photo, event_name)
 
 
-def main_menu_markup(message):
+def main_menu_markup(id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    info_list = get_personal_info(message.from_user.id)
+    info_list = get_personal_info(id)
     if info_list and info_list[0][6] == True:
         markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
     elif info_list:
@@ -318,7 +357,7 @@ def change_user_data_from_input(message, field):
     elif field == 'institute' and info[0][3] != 'МГЮА' and info[0][4] != '':
         change_user_data(message, 'faculty', '')
 
-    markup = main_menu_markup(message)
+    markup = main_menu_markup(message.from_user.id)
     bot.send_message(message.chat.id, 'Отлично, ваши данные были изменены', reply_markup=markup)
 
 
@@ -368,12 +407,12 @@ def registration(message, FIO, institute, faculty=''):
     try:        
         conn = sqlite3.connect('database.sql')
         cur = conn.cursor()
-        cur.execute('INSERT INTO users (id, chat_id, FIO, institute, faculty, course, admin_rights) VALUES ("%s", "%s", "%s", "%s", "%s", "%s", "%s")' % (message.from_user.id, message.chat.id, FIO, institute, faculty, course_num, False))
+        cur.execute('INSERT INTO users (id, chat_id, FIO, institute, faculty, course, admin_rights) VALUES (%s, %s, "%s", "%s", "%s", %s, %s)' % (message.from_user.id, message.chat.id, FIO, institute, faculty, course_num, False))
         conn.commit()
         cur.close()
         conn.close()
     except sqlite3.IntegrityError:
-        markup = main_menu_markup(message)
+        markup = main_menu_markup(message.from_user.id)
         bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
         return
 
