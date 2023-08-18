@@ -44,6 +44,7 @@ def become_admin(message):
     bot.send_message(message.chat.id, 'Введите пароль')
     bot.register_next_step_handler(message, enter_admin_password)
 
+
 def enter_admin_password(message):
     if message.text == 'admin_password':
         change_user_data(message, 'admin_rights', True)
@@ -141,8 +142,8 @@ def func(message):
                 events_info += str(i) + '. ' + key + '\n'
                 markup.add(types.InlineKeyboardButton(text= f'{i}', callback_data = key))
                 i += 1
-            bot.send_message(message.chat.id, events_info)
-            bot.send_message(message.chat.id, 'Выберите цифру мероприятия, информацию о котором хотите просмотреть, либо записаться на него', reply_markup=markup)
+            bot.send_message(message.chat.id, events_info, reply_markup=markup)
+            bot.send_message(message.chat.id, 'Выберите цифру мероприятия, информацию о котором хотите просмотреть, либо записаться на него')
 
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
@@ -182,10 +183,11 @@ def callback_message(callback):
         except sqlite3.IntegrityError:
             markup = main_menu_markup(callback.message.chat.id)
             bot.send_message(callback.message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
-            return
         except BaseException as error:
             markup = main_menu_markup(callback.message.chat.id)
             bot.send_message(callback.message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
+        finally:
+            bot.answer_callback_query(callback.id)
             return
     else:
         inline_markup = types.InlineKeyboardMarkup()
@@ -194,7 +196,7 @@ def callback_message(callback):
         src = events[event_name][1]
         with open(src, 'rb') as photo:
             bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
-
+        bot.answer_callback_query(callback.id)
 
 
 def create_table(message, table_name):
@@ -219,6 +221,10 @@ def create_table(message, table_name):
 
 def add_event_name(message):
     global event_name
+    if type(message.text) != str:
+        bot.send_message(message.chat.id, 'Пожалуйста, введи название в виде текста')
+        bot.register_next_step_handler(message, add_event_name)
+        return
     event_name = message.text
     events[event_name] = ['', '']
     create_table(message, event_name)
@@ -227,6 +233,10 @@ def add_event_name(message):
 
 
 def add_event_description(message, event_name):
+    if type(message.text) != str:
+        bot.send_message(message.chat.id, 'Пожалуйста, введи описание в виде текста')
+        bot.register_next_step_handler(message, add_event_description)
+        return
     event_description = message.text
     events[event_name][0] = event_description
     bot.send_message(message.chat.id, 'Отлично! Теперь добавь постер')
@@ -237,7 +247,7 @@ def add_event_photo(message, event_name):
     try:
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
-        src = 'C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/' + message.document.file_name
+        src = 'C:/Users/Глеб/Desktop/Учёба/Прога/PythonProject/photo/' + message.document.file_name
         with open(src, 'wb') as new_file:
             new_file.write(downloaded_file)
 
@@ -432,6 +442,7 @@ def sql_request_to_change_data(field):
         return 'UPDATE users SET course = ? WHERE id = ?'
     elif field == 'admin_rights':
         return 'UPDATE users SET admin_rights = ? WHERE id = ?'
+
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
