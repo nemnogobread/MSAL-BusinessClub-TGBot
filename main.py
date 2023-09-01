@@ -14,8 +14,7 @@ btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Мои данные')
 btn3 = types.KeyboardButton('👀 Мероприятия')
 btn4 = types.KeyboardButton('➕ Добавить ивент')
-btn5 = types.KeyboardButton('✏️ Изменить ивент')
-btn6 = types.KeyboardButton('❌ Удалить ивент')
+btn5 = types.KeyboardButton('👉 Выбрать ивент')
 btn7 = types.KeyboardButton('👀 Все пользователи')
 btn9 = types.KeyboardButton('1. ФИО')
 btn10 = types.KeyboardButton('2. Вуз')
@@ -29,6 +28,9 @@ btn17 = types.KeyboardButton('🅾️ Изменить фото')
 btn18 = types.KeyboardButton('✅ Да')
 btn19 = types.KeyboardButton('📤 Отправить рассылку')
 btn20 = types.KeyboardButton('⬅️ В меню')
+btn21 = types.KeyboardButton('👨‍👨‍👦 Участники')
+btn22 = types.KeyboardButton('✍️ Изменить')
+btn23 = types.KeyboardButton('❌ Удалить')
 
 
 
@@ -49,7 +51,7 @@ def enter_admin_password(message):
     if message.text == 'admin_password':
         change_user_data(message, 'admin_rights', True)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
+        markup.add(btn2, btn7, btn15, btn4, btn5)
         bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
     else:
         bot.send_message(message.chat.id, f'Пароль неверный')
@@ -131,7 +133,7 @@ def func(message):
         inline_markup.add(btn)
         bot.send_message(message.chat.id, club_info, reply_markup = inline_markup)
 
-    elif message.text == '👀 Мероприятия':
+    elif message.text == '👀 Мероприятия' or message.text == '👉 Выбрать ивент':
         if events == {}:
             bot.send_message(message.chat.id, 'Пока что доступных мероприятий нет\nЯ напишу тебе, как только они появятся!')
         else:
@@ -143,8 +145,14 @@ def func(message):
                 markup.add(types.InlineKeyboardButton(text= f'{i}', callback_data = key))
                 i += 1
             bot.send_message(message.chat.id, events_info, reply_markup=markup)
-            bot.send_message(message.chat.id, 'Выберите цифру мероприятия, информацию о котором хотите просмотреть, либо записаться на него')
 
+    elif message.text == '✍️ Изменить':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(btn16, btn17, btn13)
+        bot.send_message(message.chat.id, 'Что меняем?', reply_markup=markup)
+        bot.register_next_step_handler(message, change_event, event_name)
+    
+    
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Введите название нового ивента', reply_markup=markup)
@@ -197,7 +205,19 @@ def callback_message(callback):
         with open(src, 'rb') as photo:
             bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
         bot.answer_callback_query(callback.id)
+        if is_admin(callback.message.chat.id):
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add(btn21, btn22, btn20)
+            bot.send_message(callback.message.chat.id, 'Что дальше?', reply_markup=markup)
 
+
+def is_admin(id):
+    info_list = get_personal_info(id)
+    if info_list and info_list[0][6] == True:
+        return True
+    else:
+        return False
+        
 
 def create_table(message, table_name):
     try:
@@ -319,7 +339,7 @@ def main_menu_markup(id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     info_list = get_personal_info(id)
     if info_list and info_list[0][6] == True:
-        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
+        markup.add(btn2, btn7, btn15, btn4, btn5)
     elif info_list:
         markup.add(btn2, btn3, btn15)
     else:
