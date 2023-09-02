@@ -1,5 +1,6 @@
 import sqlite3
 import telebot
+import csv
 from telebot import types
 
 #C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/
@@ -16,6 +17,7 @@ btn3 = types.KeyboardButton('👀 Мероприятия')
 btn4 = types.KeyboardButton('➕ Добавить ивент')
 btn5 = types.KeyboardButton('👉 Выбрать ивент')
 btn7 = types.KeyboardButton('👀 Все пользователи')
+btn8 = types.KeyboardButton('📄 Файл')
 btn9 = types.KeyboardButton('1. ФИО')
 btn10 = types.KeyboardButton('2. Вуз')
 btn11 = types.KeyboardButton('3. Курс')
@@ -73,7 +75,7 @@ def func(message):
         bot.register_next_step_handler(message, fill_user_FIO)
 
     elif message.text == '👀 Все пользователи':
-        info_list = get_all_info()
+        info_list = get_all_info(message)
         info = ''
         for el in info_list:
             if el[4] == '':
@@ -152,7 +154,35 @@ def func(message):
         bot.send_message(message.chat.id, 'Что меняем?', reply_markup=markup)
         bot.register_next_step_handler(message, change_event, event_name)
     
-    
+    elif message.text == '👨‍👨‍👦 Участники':
+        info_list = get_event_info(message, event_name)
+        info = ''
+        for el in info_list:
+            if el[4] == '':
+                info += f'{el[2]} {el[3]} {el[5]}-й курс\n'
+            else:
+                info += f'{el[2]} {el[3]} {el[4]} {el[5]}-й курс\n'
+        bot.send_message(message.chat.id, info)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(btn8, btn20)
+        bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
+
+    elif message.text == "📄 Файл":
+        #try:
+            info_list = get_event_info(message, event_name)
+            with open('temp.csv', 'w+', newline='') as file:
+                writer = csv.writer(file, delimiter='\t')
+                writer.writerow(('ФИО', 'Вуз', 'Институт (если МГЮА)', 'Курс'))
+                for el in info_list:
+                    writer.writerow((el[2], el[3], el[4], el[5]))
+
+            markup = main_menu_markup(message.from_user.id)
+            file = open('temp.csv', 'r')
+            bot.send_document(message.chat.id, file, reply_markup=markup)
+        #except BaseException as error:
+        #    markup = main_menu_markup(message.from_user.id)
+        #    bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
+        
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Введите название нового ивента', reply_markup=markup)
@@ -161,7 +191,7 @@ def func(message):
     elif message.text == '📤 Отправить рассылку':
         inline_markup = types.InlineKeyboardMarkup()
         inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
-        info = get_all_info()
+        info = get_all_info(message)
         for el in info:
             bot.send_message(el[1], 'Осторожно ♿♿♿ Глеб ♿♿♿ тестирует ♿♿♿ рассылку ♿♿♿')
             src = events[event_name][1]
@@ -169,6 +199,7 @@ def func(message):
                 bot.send_photo(el[1], photo, caption=events[event_name][0], reply_markup=inline_markup)
         reply_markup = main_menu_markup(message.from_user.id)
         bot.send_message(message.chat.id, 'Рассылка отправлена!', reply_markup=reply_markup)
+
     else:
         bot.send_message(message.chat.id, 'На такую комманду я пока не запрограммирован..')
 
@@ -347,24 +378,46 @@ def main_menu_markup(id):
     return markup
     
 
-def get_all_info():
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM users')
-    info = cur.fetchall()
-    cur.close()
-    conn.close()
-    return info
+def get_event_info(message, name):
+    try:
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM %s' % (name))
+        info = cur.fetchall()
+        cur.close()
+        conn.close()
+        return info
+    except sqlite3.Error as error:
+        markup = main_menu_markup(message.chat.id)
+        bot.send_message(message.chat.id, f'Что-то пошло не так\n{error}', reply_markup=markup)
+
+
+def get_all_info(message):
+    try:
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users')
+        info = cur.fetchall()
+        cur.close()
+        conn.close()
+        return info
+    except sqlite3.Error as error:
+        markup = main_menu_markup(message.chat.id)
+        bot.send_message(message.chat.id, 'Что-то пошло не так\n{error}', reply_markup=markup)
 
 
 def get_personal_info(user_id):
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM users WHERE id = ?', (user_id, ))
-    info = cur.fetchall()
-    cur.close()
-    conn.close()
-    return info
+    try:
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM users WHERE id = ?', (user_id, ))
+        info = cur.fetchall()
+        cur.close()
+        conn.close()
+        return info
+    except sqlite3.Error as error:
+        markup = main_menu_markup(user_id)
+        bot.send_message(user_id, 'Что-то пошло не так\n{error}', reply_markup=markup)
 
 
 def change_user_data_from_input(message, field):
