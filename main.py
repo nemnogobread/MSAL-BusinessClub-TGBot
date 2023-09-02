@@ -223,7 +223,7 @@ def func(message):
         inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
         info = get_all_info(message)
         for el in info:
-            bot.send_message(el[1], 'Осторожно ♿♿♿ Глеб ♿♿♿ тестирует ♿♿♿ рассылку ♿♿♿')
+            bot.send_message(el[1], 'Осторожно ♿♿♿ тестируется ♿♿♿ рассылка ♿♿♿')
             src = events[event_name][1]
             with open(src, 'rb') as photo:
                 bot.send_photo(el[1], photo, caption=events[event_name][0], reply_markup=inline_markup)
@@ -268,7 +268,7 @@ def callback_message(callback):
         bot.answer_callback_query(callback.id)
         if is_admin(callback.message.chat.id):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            markup.add(btn21, btn22, btn23, btn20)
+            markup.add(btn21, btn22, btn23, btn20, btn19)
             bot.send_message(callback.message.chat.id, 'Что дальше?', reply_markup=markup)
 
 
@@ -439,7 +439,7 @@ def get_event_info(message, name):
     try:
         conn = sqlite3.connect('database.sql')
         cur = conn.cursor()
-        cur.execute('SELECT * FROM %s' % (name))
+        cur.execute('SELECT * FROM `%s`' % (name))
         info = cur.fetchall()
         cur.close()
         conn.close()
