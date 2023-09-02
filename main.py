@@ -1,6 +1,7 @@
 import sqlite3
 import telebot
-import csv
+import xlsxwriter
+import os
 from telebot import types
 
 #C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/
@@ -61,7 +62,7 @@ def enter_admin_password(message):
 
 @bot.message_handler(content_types=['text'])
 def func(message):
-    
+    global event_name
     if message.text == '📲 Зарегистрироваться':
         info_list = get_personal_info(message.from_user.id)
         if info_list:
@@ -155,33 +156,62 @@ def func(message):
         bot.register_next_step_handler(message, change_event, event_name)
     
     elif message.text == '👨‍👨‍👦 Участники':
-        info_list = get_event_info(message, event_name)
-        info = ''
-        for el in info_list:
-            if el[4] == '':
-                info += f'{el[2]} {el[3]} {el[5]}-й курс\n'
-            else:
-                info += f'{el[2]} {el[3]} {el[4]} {el[5]}-й курс\n'
-        bot.send_message(message.chat.id, info)
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn8, btn20)
-        bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
+        try:
+            info_list = get_event_info(message, event_name)
+            info = ''
+            for el in info_list:
+                if el[4] == '':
+                    info += f'{el[2]} {el[3]} {el[5]}-й курс\n'
+                else:
+                    info += f'{el[2]} {el[3]} {el[4]} {el[5]}-й курс\n'
+            if info == '':
+                markup = main_menu_markup(message.from_user.id)
+                bot.send_message(message.chat.id, 'Пока что никто не зарегестрировался на это мероприятие', reply_markup=markup)
+                return
+            bot.send_message(message.chat.id, info)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add(btn8, btn20)
+            bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
+        except telebot.apihelper.ApiTelegramException as error:
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, f'Что-то пошло не так\nApiTelegramException: {error}', reply_markup=markup)
+        except BaseException as error:
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
 
     elif message.text == "📄 Файл":
-        #try:
-            info_list = get_event_info(message, event_name)
-            with open('temp.csv', 'w+', newline='') as file:
-                writer = csv.writer(file, delimiter='\t')
-                writer.writerow(('ФИО', 'Вуз', 'Институт (если МГЮА)', 'Курс'))
-                for el in info_list:
-                    writer.writerow((el[2], el[3], el[4], el[5]))
-
-            markup = main_menu_markup(message.from_user.id)
-            file = open('temp.csv', 'r')
+        markup = main_menu_markup(message.from_user.id)
+        try:
+            create_xlsx_file(message, event_name)
+            file = open('temp.xlsx', 'rb+')
             bot.send_document(message.chat.id, file, reply_markup=markup)
-        #except BaseException as error:
-        #    markup = main_menu_markup(message.from_user.id)
-        #    bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
+            file.close()
+            os.remove('temp.xlsx')
+        except telebot.apihelper.ApiTelegramException as error:
+            bot.send_message(message.chat.id, f'Что-то пошло не так\nApiTelegramException: {error}', reply_markup=markup)
+        except OSError as error:
+            bot.send_message(message.chat.id, f'Что-то пошло не так\nOSError: {error}', reply_markup=markup)
+        except BaseException as error:
+            bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
+
+    elif message.text == '❌ Удалить':
+        try:
+            conn = sqlite3.connect('database.sql')
+            cur = conn.cursor()
+            cur.execute('DROP TABLE IF EXISTS %s' % (event_name))
+            conn.commit()
+            cur.close()
+            conn.close()
+            del events[event_name]
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, f'Мероприятие \"{event_name}\" успешно удалено', reply_markup=markup)
+            event_name = ''
+        except sqlite3.Error as error:
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, f'Что-то пошло не так при работе с базой данных:\n{error}', reply_markup=markup)
+        except BaseException as error:
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
         
     elif message.text == '➕ Добавить ивент':
         markup = types.ReplyKeyboardRemove()
@@ -238,8 +268,35 @@ def callback_message(callback):
         bot.answer_callback_query(callback.id)
         if is_admin(callback.message.chat.id):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            markup.add(btn21, btn22, btn20)
+            markup.add(btn21, btn22, btn23, btn20)
             bot.send_message(callback.message.chat.id, 'Что дальше?', reply_markup=markup)
+
+
+def create_xlsx_file(message, event_name):
+    info_list = get_event_info(message, event_name)
+    try:
+        workbook = xlsxwriter.Workbook('temp.xlsx')
+        worksheet = workbook.add_worksheet()
+        worksheet.set_column(0, 0, 30)
+        worksheet.set_column(1, 1, 15)
+        worksheet.set_column(2, 2, 15)
+        worksheet.set_column(3, 3, 5)
+        bold = workbook.add_format({"bold": True})
+        worksheet.write(0, 0, 'ФИО', bold)
+        worksheet.write(0, 1, 'Вуз', bold)
+        worksheet.write(0, 2, 'Институт', bold)
+        worksheet.write(0, 3, 'Курс', bold)
+        i = 1
+        for el in info_list:
+            worksheet.write(i, 0, el[2])
+            worksheet.write(i, 1, el[3])
+            worksheet.write(i, 2, el[4])
+            worksheet.write(i, 3, el[5])
+            i += 1
+        workbook.close()
+    except BaseException as error:
+        markup = main_menu_markup(message.from_user.id)    
+        bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup)
 
 
 def is_admin(id):
