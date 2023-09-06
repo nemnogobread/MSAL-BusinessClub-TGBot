@@ -10,6 +10,23 @@ from telebot import types
 events = {}
 event_name = ''
 
+private_club_info = f"""Закрытый Бизнес-клуб 💠\n
+Это комьюнити сильнейших студентов-предпринимателей и топ-менеджеров крупных компаний.\n
+Ценность Закрытого клуба:
+• обмен связями и ресурсами
+• совместное создание бизнес-проектов
+• закрытые встречи с лидирующими на рынке предпринимателями и инвесторами
+• сильное комьюнити, настроенное на взаимный рост и нетворкинг\n
+Уже сейчас в клубе наши резиденты проводят встречи и запускают совместные бизнес-проекты.\n
+Закрытый Бизнес-клуб входит в Объединение Бизнес-клубов России (ОБКР https://обкр.рф), благодаря чему ценность клуба возрастает в несколько раз, а резиденты имеют возможность коммуницировать с резидентами других Закрытых клубов, входящих в Объединение.\n
+Закрытый клуб – надежная бизнес-сеть для поддержки и обмена опытом и перспектива для роста.\n
+Для вступления необходимо соответствовать минимум одному критерию:
+ • наличие собственного бизнеса с оборотом более 6 миллионов в год
+ • чистая прибыль одного и более бизнесов от 1 миллиона в год
+ • должность топ-менеджера компании\n
+Оставь заявку и стань частью закрытого бизнес-комьюнити МГЮА: https://forms.gle/fsKJfsRDkZBPYDdEA (https://vk.com/away.php?to=https%3A%2F%2Fforms.gle%2FfsKJfsRDkZBPYDdEA&post=-90005775_1163&cc_key=)\n
+*Если вы сами не имеете собственного бизнеса или опыта в топ-менеджменте, но знакомы с потенциальным резидентом для Закрытого клуба, пригласите его к нам, и в случае успешного прохождения отбора, вы сможете посетить одну из наших закрытых встреч."""
+
 bot = telebot.TeleBot('6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
@@ -17,6 +34,7 @@ btn2 = types.KeyboardButton('📋 Мои данные')
 btn3 = types.KeyboardButton('👀 Мероприятия')
 btn4 = types.KeyboardButton('➕ Добавить ивент')
 btn5 = types.KeyboardButton('👉 Выбрать ивент')
+btn6 = types.KeyboardButton('🔒 Закрытый клуб')
 btn7 = types.KeyboardButton('👀 Все пользователи')
 btn8 = types.KeyboardButton('📄 Файл')
 btn9 = types.KeyboardButton('1. ФИО')
@@ -26,7 +44,7 @@ btn12 = types.KeyboardButton('4. Институт (факультет)')
 btn13 = types.KeyboardButton('⬅️ Назад')
 btn14 = types.KeyboardButton('✏️ Изменить данные')
 btn15 = types.KeyboardButton('📃 О клубе')
-btn16 = types.KeyboardButton('🅾️ Изменить текст') 
+btn16 = types.KeyboardButton('🅾️ Изменить текст')
 btn17 = types.KeyboardButton('🅾️ Изменить фото')
 btn18 = types.KeyboardButton('✅ Да')
 btn19 = types.KeyboardButton('📤 Отправить рассылку')
@@ -36,13 +54,12 @@ btn22 = types.KeyboardButton('✍️ Изменить')
 btn23 = types.KeyboardButton('❌ Удалить')
 
 
-
 @bot.message_handler(commands=['start', 'hello'])
 def start_message(message):
     create_table(message, 'users')
     markup = main_menu_markup(message.from_user.id)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
- 
+
 
 @bot.message_handler(commands=['become_admin'])
 def become_admin(message):
@@ -69,7 +86,6 @@ def func(message):
             markup = markup = main_menu_markup(message.from_user.id)
             bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
             return
-        
         markup = types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
         bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
@@ -135,6 +151,11 @@ def func(message):
         btn = types.InlineKeyboardButton(text='Наша группа', url = 'https://vk.com/businessclub_msal')
         inline_markup.add(btn)
         bot.send_message(message.chat.id, club_info, reply_markup = inline_markup)
+
+    elif message.text == '🔒 Закрытый клуб':
+        club_info = private_club_info
+        markup = main_menu_markup(message.from_user.id)
+        bot.send_message(message.chat.id, club_info, reply_markup = markup)
 
     elif message.text == '👀 Мероприятия' or message.text == '👉 Выбрать ивент':
         if events == {}:
@@ -202,6 +223,8 @@ def func(message):
             conn.commit()
             cur.close()
             conn.close()
+            src = events[event_name][1]
+            os.remove(src)
             del events[event_name]
             markup = main_menu_markup(message.from_user.id)
             bot.send_message(message.chat.id, f'Мероприятие \"{event_name}\" успешно удалено', reply_markup=markup)
@@ -259,17 +282,21 @@ def callback_message(callback):
             bot.answer_callback_query(callback.id)
             return
     else:
-        inline_markup = types.InlineKeyboardMarkup()
-        inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
-        event_name = callback.data
-        src = events[event_name][1]
-        with open(src, 'rb') as photo:
-            bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
-        bot.answer_callback_query(callback.id)
-        if is_admin(callback.message.chat.id):
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            markup.add(btn21, btn22, btn23, btn20, btn19)
-            bot.send_message(callback.message.chat.id, 'Что дальше?', reply_markup=markup)
+        try:
+            inline_markup = types.InlineKeyboardMarkup()
+            inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
+            event_name = callback.data
+            src = events[event_name][1]
+            with open(src, 'rb') as photo:
+                bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
+            bot.answer_callback_query(callback.id)
+            if is_admin(callback.message.chat.id):
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup.add(btn21, btn22, btn23, btn20, btn19)
+                bot.send_message(callback.message.chat.id, 'Что дальше?', reply_markup=markup)
+        except BaseException as error:
+            markup = main_menu_markup(callback.message.chat.id)    
+            bot.send_message(callback.message.chat.id, f'Что-то пошло не так:\n{error}', reply_markup=markup) 
 
 
 def create_xlsx_file(message, event_name):
@@ -418,8 +445,11 @@ def change_event_photo(message, event_name):
         markup.add(btn16, btn17, btn18)
         bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
         bot.register_next_step_handler(message, change_event, event_name)
-    except Exception:
+    except AttributeError:
         bot.reply_to(message, 'Пожалуйста, скиньте постер в виде файла')
+        bot.register_next_step_handler(message, change_event_photo, event_name)
+    except BaseException as error:
+        bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"start_message\". Пожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
         bot.register_next_step_handler(message, change_event_photo, event_name)
 
 
@@ -427,11 +457,11 @@ def main_menu_markup(id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     info_list = get_personal_info(id)
     if info_list and info_list[0][6] == True:
-        markup.add(btn2, btn7, btn15, btn4, btn5)
+        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
     elif info_list:
-        markup.add(btn2, btn3, btn15)
+        markup.add(btn2, btn3, btn15, btn6)
     else:
-        markup.add(btn1, btn15)
+        markup.add(btn1, btn15, btn6)
     return markup
     
 
@@ -446,7 +476,9 @@ def get_event_info(message, name):
         return info
     except sqlite3.Error as error:
         markup = main_menu_markup(message.chat.id)
-        bot.send_message(message.chat.id, f'Что-то пошло не так\n{error}', reply_markup=markup)
+        bot.send_message(message.chat.id, f'Что-то пошло не так:\n{error}\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy', reply_markup=markup)
+    except BaseException as error:
+        bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_event_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
 
 
 def get_all_info(message):
@@ -461,6 +493,8 @@ def get_all_info(message):
     except sqlite3.Error as error:
         markup = main_menu_markup(message.chat.id)
         bot.send_message(message.chat.id, 'Что-то пошло не так\n{error}', reply_markup=markup)
+    except BaseException as error:
+        bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_all_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
 
 
 def get_personal_info(user_id):
@@ -475,6 +509,8 @@ def get_personal_info(user_id):
     except sqlite3.Error as error:
         markup = main_menu_markup(user_id)
         bot.send_message(user_id, 'Что-то пошло не так\n{error}', reply_markup=markup)
+    except BaseException as error:
+        bot.send_message(user_id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_personal_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
 
 
 def change_user_data_from_input(message, field):
@@ -502,15 +538,21 @@ def change_user_data_from_input(message, field):
 
 
 def change_user_data(message, field, data):
-    if field == 'institute' or field == 'faculty':
-        data = data.upper()
-    conn = sqlite3.connect('database.sql')
-    cur = conn.cursor()
-    request = sql_request_to_change_data(field)
-    cur.execute(request, (data, message.from_user.id))
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        if field == 'institute' or field == 'faculty':
+            data = data.upper()
+        conn = sqlite3.connect('database.sql')
+        cur = conn.cursor()
+        request = sql_request_to_change_data(field)
+        cur.execute(request, (data, message.from_user.id))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except sqlite3.Error as error:
+        markup = main_menu_markup(message.chat.id)
+        bot.send_message(message.chat.id, 'Что-то пошло не так\n{error}', reply_markup=markup)
+    except BaseException as error:
+        bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_personal_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
 
 
 def fill_user_FIO(message):
