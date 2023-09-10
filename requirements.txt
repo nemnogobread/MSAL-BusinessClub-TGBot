@@ -1,0 +1,6 @@
+sqlite3
+telebot
+xlsxwriter
+os
+telebot
+dotenv
