@@ -382,7 +382,7 @@ def add_event_photo(message, event_name):
     try:
         file_info = bot.get_file(message.document.file_id)
         downloaded_file = bot.download_file(file_info.file_path)
-        src = 'C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/' + message.document.file_name
+        src = 'photo/' + message.document.file_name
         with open(src, 'wb') as new_file:
             new_file.write(downloaded_file)
 
