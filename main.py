@@ -3,12 +3,9 @@ import telebot
 import xlsxwriter
 import os
 from telebot import types
-from dotenv import load_dotenv
 
 #C:/Users/glebm/OneDrive/Рабочий стол/programming/pythonProject/photo/
 #C:/Users/Глеб/Desktop/Учёба/Прога/PythonProject/photo/
-
-load_dotenv()
 
 events = {}
 event_name = ''
@@ -30,7 +27,7 @@ private_club_info = f"""Закрытый Бизнес-клуб 💠\n
 Оставь заявку и стань частью закрытого бизнес-комьюнити МГЮА: https://forms.gle/fsKJfsRDkZBPYDdEA (https://vk.com/away.php?to=https%3A%2F%2Fforms.gle%2FfsKJfsRDkZBPYDdEA&post=-90005775_1163&cc_key=)\n
 *Если вы сами не имеете собственного бизнеса или опыта в топ-менеджменте, но знакомы с потенциальным резидентом для Закрытого клуба, пригласите его к нам, и в случае успешного прохождения отбора, вы сможете посетить одну из наших закрытых встреч."""
 
-bot = telebot.TeleBot(token=os.environ.get('TOKEN'), skip_pending=True)
+bot = telebot.TeleBot(token='6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Мои данные')
