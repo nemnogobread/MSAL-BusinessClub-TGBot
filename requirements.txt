@@ -1,4 +1,4 @@
 telebot
 xlsxwriter
 telebot
-dotenv
+python-dotenv
