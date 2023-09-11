@@ -284,7 +284,7 @@ def callback_message(callback):
     else:
         try:
             event_name = callback.data
-            if event_name in events == False:
+            if (event_name in events) == False:
                 if not events:
                     markup = main_menu_markup(callback.message.chat.id)
                     bot.send_message(callback.message.chat.id, 'На данный момент доступных мероприятий нет', reply_markup=markup)
