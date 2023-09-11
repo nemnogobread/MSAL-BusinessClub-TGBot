@@ -283,9 +283,26 @@ def callback_message(callback):
             return
     else:
         try:
+            event_name = callback.data
+            if event_name in events == False:
+                if not events:
+                    markup = main_menu_markup(callback.message.chat.id)
+                    bot.send_message(callback.message.chat.id, 'На данный момент доступных мероприятий нет', reply_markup=markup)
+                    bot.answer_callback_query(callback.id)
+                    return
+                else:
+                    markup = types.InlineKeyboardMarkup()
+                    i = 1
+                    events_info = 'Это мероприятие было удалено. Вот актульный список:\n\n'
+                    for key in events:
+                        events_info += str(i) + '. ' + key + '\n'
+                        markup.add(types.InlineKeyboardButton(text= f'{i}', callback_data = key))
+                        i += 1
+                    bot.send_message(callback.message.chat.id, events_info, reply_markup=markup)
+                    bot.answer_callback_query(callback.id)
+                    return
             inline_markup = types.InlineKeyboardMarkup()
             inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
-            event_name = callback.data
             src = events[event_name][1]
             with open(src, 'rb') as photo:
                 bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
