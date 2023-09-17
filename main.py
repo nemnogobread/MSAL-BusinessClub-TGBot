@@ -10,7 +10,7 @@ from telebot import types
 events = {}
 event_name = ''
 
-private_club_info = f"""Закрытый Бизнес-клуб 💠\n
+private_club_info = f"""<b>Закрытый Бизнес-клуб </b>💠\n
 Это комьюнити сильнейших студентов-предпринимателей и топ-менеджеров крупных компаний.\n
 Ценность Закрытого клуба:
 • обмен связями и ресурсами
@@ -24,10 +24,27 @@ private_club_info = f"""Закрытый Бизнес-клуб 💠\n
  • наличие собственного бизнеса с оборотом более 6 миллионов в год
  • чистая прибыль одного и более бизнесов от 1 миллиона в год
  • должность топ-менеджера компании\n
-Оставь заявку и стань частью закрытого бизнес-комьюнити МГЮА: https://forms.gle/fsKJfsRDkZBPYDdEA (https://vk.com/away.php?to=https%3A%2F%2Fforms.gle%2FfsKJfsRDkZBPYDdEA&post=-90005775_1163&cc_key=)\n
-*Если вы сами не имеете собственного бизнеса или опыта в топ-менеджменте, но знакомы с потенциальным резидентом для Закрытого клуба, пригласите его к нам, и в случае успешного прохождения отбора, вы сможете посетить одну из наших закрытых встреч."""
+Оставь заявку и стань частью закрытого бизнес-комьюнити МГЮА: https://forms.gle/fsKJfsRDkZBPYDdEA \n
+*Если вы сами не имеете собственного бизнеса или опыта в топ-менеджменте, но знакомы с потенциальным резидентом для Закрытого клуба, пригласите его к нам, и в случае успешного прохождения отбора, вы сможете посетить одну из наших закрытых встреч.\n
+---&gt <a href="https://www.youtube.com/watch?v=hhBjY5_waFo"> Наш промо ролик </a> &lt---"""
 
-bot = telebot.TeleBot(token='6556691353:AAET9cz_wPIog5m2n25D8nnQXy-h9GXCIlk', skip_pending=True)
+public_club_info= f"""<b>⚡️ Бизнес-клуб МГЮА - Люди. Знания. Опыт.</b> \n
+• один из лучших студенческих Бизнес-клубов России\n
+• бизнес-сообщество ведущего юридического вуза России – Университет имени О.Е. Кутафина (МГЮА) \n
+• объединение прорывных студентов: стартаперов, предпринимателей и ТОПов в своей сфере \n
+🎯Наша миссия - объединение студентов, достигших результатов в бизнес-среде, для кратного роста! \n
+У нас вы будете:
+ • проводить открытые и закрытые мероприятия с топами рынка
+ • брать интервью у предпринимателей 
+ • вести социальные сети на тему бизнеса
+ • посещать бизнес-форумы партнеров и многое другое!\n
+Бизнес-клуб объединяет способных студентов, заинтересованных в бизнесе, которые вдохновляют, поддерживают друг друга и горят своим делом. \n
+Интересуешься бизнесом? Уже являешься предпринимателем или только собираешься выходить на рынок? 
+Вступай в Бизнес-клуб! И обязательно подписывайся на наши группу/канал, чтобы не пропустить интересные новости --> <a href="https://vk.com/businessclub_msal"> VK </a> и <a href="https://t.me/business_clubMSAL"> TG </a>"""
+
+user_agreement = f""" """
+
+bot = telebot.TeleBot(token='6624656705:AAEzIo8t1mZAyhcpALT-hzjXQGVBxua5F-Q', skip_pending=True)
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Мои данные')
@@ -52,13 +69,16 @@ btn20 = types.KeyboardButton('⬅️ В меню')
 btn21 = types.KeyboardButton('👨‍👨‍👦 Участники')
 btn22 = types.KeyboardButton('✍️ Изменить')
 btn23 = types.KeyboardButton('❌ Удалить')
+btn24 = types.KeyboardButton('✅ Согласен')
+btn25 = types.KeyboardButton('❌ Не согласен')
+
 
 
 @bot.message_handler(commands=['start', 'hello'])
 def start_message(message):
     create_table(message, 'users')
     markup = main_menu_markup(message.from_user.id)
-    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я тестовый бот для бизнес-клуба МГЮА', reply_markup=markup)
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Я бот бизнес-клуба МГЮА', reply_markup=markup)
 
 
 @bot.message_handler(commands=['become_admin'])
@@ -83,13 +103,13 @@ def func(message):
     if message.text == '📲 Зарегистрироваться':
         info_list = get_personal_info(message.from_user.id)
         if info_list:
-            markup = markup = main_menu_markup(message.from_user.id)
+            markup = main_menu_markup(message.from_user.id)
             bot.send_message(message.chat.id, 'Вы уже зарегистрированы!', reply_markup=markup)
             return
-        markup = types.ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!', reply_markup=markup)
-        bot.send_message(message.chat.id, 'Введите ваше ФИО (полностью)')
-        bot.register_next_step_handler(message, fill_user_FIO)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(btn24, btn25)
+        bot.send_message(message.chat.id, 'Отлично, регистрация займёт не больше 5 минут!\n Но сперва подтвердите согласие на получение сообщений и обработку персональных данных:\n https://docs.google.com/document/d/1QfU-2YYUstVmTLHTee5JebKkd5jEB0eQnOj8SCPIh-I/edit#heading=h.6852be3h0van', reply_markup=markup)
+        bot.register_next_step_handler(message, user_agreement)
 
     elif message.text == '👀 Все пользователи':
         info_list = get_all_info(message)
@@ -146,16 +166,19 @@ def func(message):
         bot.send_message(message.chat.id, 'Возвращаемся', reply_markup=markup)
 
     elif message.text == '📃 О клубе':
-        club_info = "Объединение - это начало. Держаться вместе - это прогресс. Совместная работа - это успех.\n\n©Генри Форд.\n\nБизнес - дело. \n\nКлуб - место объединений. \n\nА Бизнес-клуб - это сообщество, которое меняет наше видение на мир.\n\nБизнес-клуб - это возможности, за которые мы хватаемся и действуем. \n\nБизнес-клуб - это новые мощные знакомства с настолько разными людьми, что картинка серого города приобретает цвета, которые помогают чувствовать себя живым. \n\nЭто опыт, знания, а самое главное - \n\nБизнес-клуб - это люди, которые горят своим делом. Они покоряют сердца своим энтузиазмом, смело смотрят в глаза страху неизвестности и цепляют невероятной харизмой.\n\nБизнес - это всегда люди."
+        club_info = public_club_info
         inline_markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton(text='Наша группа', url = 'https://vk.com/businessclub_msal')
-        inline_markup.add(btn)
-        bot.send_message(message.chat.id, club_info, reply_markup = inline_markup)
+        inline_btn1 = types.InlineKeyboardButton(text='Группа ВК', url = 'https://vk.com/businessclub_msal')
+        inline_btn2 = types.InlineKeyboardButton(text='Группа ТГ', url = 'https://t.me/business_clubMSAL')
+        inline_markup.add(inline_btn1, inline_btn2)
+        bot.send_message(message.chat.id, club_info, reply_markup = inline_markup, parse_mode='html')
 
     elif message.text == '🔒 Закрытый клуб':
         club_info = private_club_info
-        markup = main_menu_markup(message.from_user.id)
-        bot.send_message(message.chat.id, club_info, reply_markup = markup)
+        inline_markup = types.InlineKeyboardMarkup()
+        inline_btn1 = types.InlineKeyboardButton(text='Наше промо', url = 'https://www.youtube.com/watch?v=hhBjY5_waFo')
+        inline_markup.add(inline_btn1)
+        bot.send_message(message.chat.id, club_info, reply_markup = inline_markup, parse_mode='html')
 
     elif message.text == '👀 Мероприятия' or message.text == '👉 Выбрать ивент':
         if events == {}:
@@ -246,7 +269,6 @@ def func(message):
         inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
         info = get_all_info(message)
         for el in info:
-            bot.send_message(el[1], 'Осторожно ♿♿♿ тестируется ♿♿♿ рассылка ♿♿♿')
             src = events[event_name][1]
             with open(src, 'rb') as photo:
                 bot.send_photo(el[1], photo, caption=events[event_name][0], reply_markup=inline_markup)
@@ -570,6 +592,19 @@ def change_user_data(message, field, data):
         bot.send_message(message.chat.id, 'Что-то пошло не так\n{error}', reply_markup=markup)
     except BaseException as error:
         bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_personal_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
+
+
+def user_agreement(message):
+    if message.text == "✅ Согласен":
+        markup = types.ReplyKeyboardRemove()
+        bot.send_message(message.chat.id, 'Введите ваше ФИО, полностью', reply_markup=markup)
+        bot.register_next_step_handler(message, fill_user_FIO)
+    elif message.text == "❌ Не согласен":
+        markup = main_menu_markup(message.from_user.id)
+        bot.send_message(message.chat.id, 'Что ж, это довольно честно', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Нажите на кнопку "✅ Согласен" или "❌ Не согласен"')
+        bot.register_next_step_handler(message, user_agreement)
 
 
 def fill_user_FIO(message):
