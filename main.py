@@ -48,7 +48,7 @@ bot = telebot.TeleBot(token='6624656705:AAEzIo8t1mZAyhcpALT-hzjXQGVBxua5F-Q', sk
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Мои данные')
-btn3 = types.KeyboardButton('👀 Мероприятия')
+btn3 = types.KeyboardButton('👀 Ивенты')
 btn4 = types.KeyboardButton('➕ Добавить ивент')
 btn5 = types.KeyboardButton('👉 Выбрать ивент')
 btn6 = types.KeyboardButton('🔒 Закрытый клуб')
@@ -74,7 +74,7 @@ btn25 = types.KeyboardButton('❌ Не согласен')
 
 
 
-@bot.message_handler(commands=['start', 'hello'])
+@bot.message_handler(commands=['start', 'hello', 'menu'])
 def start_message(message):
     create_table(message, 'users')
     markup = main_menu_markup(message.from_user.id)
@@ -87,11 +87,30 @@ def become_admin(message):
     bot.register_next_step_handler(message, enter_admin_password)
 
 
+@bot.message_handler(commands=['info'])
+def get_public_club_info(message):
+    club_info = public_club_info
+    inline_markup = types.InlineKeyboardMarkup()
+    inline_btn1 = types.InlineKeyboardButton(text='Группа ВК', url = 'https://vk.com/businessclub_msal')
+    inline_btn2 = types.InlineKeyboardButton(text='Группа ТГ', url = 'https://t.me/business_clubMSAL')
+    inline_markup.add(inline_btn1, inline_btn2)
+    bot.send_message(message.chat.id, club_info, reply_markup = inline_markup, parse_mode='html')
+
+
+@bot.message_handler(commands=['private_info'])
+def get_private_club_info(message):
+    club_info = private_club_info
+    inline_markup = types.InlineKeyboardMarkup()
+    inline_btn1 = types.InlineKeyboardButton(text='Наше промо', url = 'https://www.youtube.com/watch?v=hhBjY5_waFo')
+    inline_markup.add(inline_btn1)
+    bot.send_message(message.chat.id, club_info, reply_markup = inline_markup, parse_mode='html')
+
+
 def enter_admin_password(message):
     if message.text == 'admin_password':
         change_user_data(message, 'admin_rights', True)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn2, btn7, btn15, btn4, btn5)
+        markup.add(btn2, btn7, btn4, btn5)
         bot.send_message(message.chat.id, f'Отличо, {message.from_user.first_name}! Теперь ты администратор!', reply_markup=markup)
     else:
         bot.send_message(message.chat.id, f'Пароль неверный')
@@ -440,32 +459,43 @@ def add_event_photo(message, event_name):
     
 
 def change_event(message, event_name):
-    if message.text == '✅ Да':
+    try:    
+        if message.text == '✅ Да':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add(btn19, btn20)
+            bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
+
+        elif message.text == '🅾️ Изменить текст':
+            markup = types.ReplyKeyboardRemove()
+            bot.send_message(message.chat.id, 'Ввидите описание заново', reply_markup=markup)
+            bot.register_next_step_handler(message, change_event_description, event_name)
+
+        elif message.text == '🅾️ Изменить фото':
+            markup = types.ReplyKeyboardRemove()
+            bot.send_message(message.chat.id, 'Пришлите фото заново', reply_markup=markup)
+            bot.register_next_step_handler(message, change_event_photo, event_name)
+    except:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add(btn19, btn20)
-        bot.send_message(message.chat.id, 'Что дальше?', reply_markup=markup)
+        markup.add(btn16, btn17, btn18)
+        bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
+        bot.register_next_step_handler(message, change_event, event_name)
 
-    elif message.text == '🅾️ Изменить текст':
-        markup = types.ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, 'Ввидите описание заново', reply_markup=markup)
-        bot.register_next_step_handler(message, change_event_description, event_name)
-
-    elif message.text == '🅾️ Изменить фото':
-        markup = types.ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, 'Пришлите фото заново', reply_markup=markup)
-        bot.register_next_step_handler(message, change_event_photo, event_name)
         
 
 def change_event_description(message, event_name):
-    event_description = message.text
-    events[event_name][0] = event_description
-    src = events[event_name][1]
-    with open(src, 'rb') as photo:
-        bot.send_photo(message.chat.id, photo, caption=events[event_name][0])
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(btn16, btn17, btn18)
-    bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
-    bot.register_next_step_handler(message, change_event, event_name)
+    try:
+        event_description = message.text
+        events[event_name][0] = event_description
+        src = events[event_name][1]
+        with open(src, 'rb') as photo:
+            bot.send_photo(message.chat.id, photo, caption=events[event_name][0])
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(btn16, btn17, btn18)
+        bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
+        bot.register_next_step_handler(message, change_event, event_name)
+    except:
+        bot.send_message(message.chat.id, 'Ввидите описание заново, в виде текста')
+        bot.register_next_step_handler(message, change_event_description, event_name)
 
 
 def change_event_photo(message, event_name):
@@ -496,7 +526,7 @@ def main_menu_markup(id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     info_list = get_personal_info(id)
     if info_list and info_list[0][6] == True:
-        markup.add(btn2, btn7, btn15, btn4, btn5, btn6)
+        markup.add(btn2, btn7, btn4, btn5)
     elif info_list:
         markup.add(btn2, btn3, btn15, btn6)
     else:
@@ -553,27 +583,37 @@ def get_personal_info(user_id):
 
 
 def change_user_data_from_input(message, field):
-    data = message.text
-    if field == 'course':
-        try: 
-            data = int(data)
-        except ValueError:
-            bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
-            bot.register_next_step_handler(message, change_user_data_from_input, 'course')
+    try:
+        if type(message.text) != str:
+            bot.send_message(message.chat.id, 'Что-то пошло не так, попробуйте снова')
+            bot.register_next_step_handler(message, change_user_data_from_input, field)
             return
-            
-    change_user_data(message, field, data)
-    info = get_personal_info(message.from_user.id)
+        data = message.text
+        if field == 'course':
+            try: 
+                data = int(data)
+            except ValueError:
+                bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
+                bot.register_next_step_handler(message, change_user_data_from_input, 'course')
+                return
+                
+        change_user_data(message, field, data)
+        info = get_personal_info(message.from_user.id)
 
-    if field == 'institute' and data.upper() == 'МГЮА':
-        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
-        bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
+        if field == 'institute' and data.upper() == 'МГЮА':
+            bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+            bot.register_next_step_handler(message, change_user_data_from_input, 'faculty')
+            return
+        elif field == 'institute' and info[0][3] != 'МГЮА' and info[0][4] != '':
+            change_user_data(message, 'faculty', '')
+
+        markup = main_menu_markup(message.from_user.id)
+        bot.send_message(message.chat.id, 'Отлично, ваши данные были изменены', reply_markup=markup)
+    except:
+        bot.send_message(message.chat.id, 'Что-то пошло не так, попробуйте снова')
+        bot.register_next_step_handler(message, change_user_data_from_input, field)
         return
-    elif field == 'institute' and info[0][3] != 'МГЮА' and info[0][4] != '':
-        change_user_data(message, 'faculty', '')
 
-    markup = main_menu_markup(message.from_user.id)
-    bot.send_message(message.chat.id, 'Отлично, ваши данные были изменены', reply_markup=markup)
 
 
 def change_user_data(message, field, data):
@@ -591,48 +631,70 @@ def change_user_data(message, field, data):
         markup = main_menu_markup(message.chat.id)
         bot.send_message(message.chat.id, 'Что-то пошло не так\n{error}', reply_markup=markup)
     except BaseException as error:
-        bot.send_message(message.chat.id, f'Возникла ошибка в ходе работы бота:\n{error}, func \"get_personal_info\"\nПожалуйста, перешилите это сообщение @hlebbezdrozhevoy')
+        bot.send_message(message.chat.id, 'Что-то пошло не так, попробуйте снова')
+        bot.register_next_step_handler(message, change_user_data, field, data)
+        return
 
 
 def user_agreement(message):
-    if message.text == "✅ Согласен":
-        markup = types.ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, 'Введите ваше ФИО, полностью', reply_markup=markup)
-        bot.register_next_step_handler(message, fill_user_FIO)
-    elif message.text == "❌ Не согласен":
-        markup = main_menu_markup(message.from_user.id)
-        bot.send_message(message.chat.id, 'Что ж, это довольно честно', reply_markup=markup)
-    else:
+    try:
+        if message.text == "✅ Согласен":
+            markup = types.ReplyKeyboardRemove()
+            bot.send_message(message.chat.id, 'Введите ваше ФИО, полностью', reply_markup=markup)
+            bot.register_next_step_handler(message, fill_user_FIO)
+        elif message.text == "❌ Не согласен":
+            markup = main_menu_markup(message.from_user.id)
+            bot.send_message(message.chat.id, 'Что ж, это довольно честно', reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id, 'Нажите на кнопку "✅ Согласен" или "❌ Не согласен"')
+            bot.register_next_step_handler(message, user_agreement)
+    except:
         bot.send_message(message.chat.id, 'Нажите на кнопку "✅ Согласен" или "❌ Не согласен"')
         bot.register_next_step_handler(message, user_agreement)
 
 
 def fill_user_FIO(message):
-    FIO = message.text
-    bot.send_message(message.chat.id, 'Введите официальное название вашего вуза, например "МГЮА"')
-    bot.register_next_step_handler(message, fill_user_institute, FIO)
+    try:
+        if type(message.text) != str:
+            bot.send_message(message.chat.id, 'Введите ваше ФИО, полностью, в виде текста')
+            bot.register_next_step_handler(message, fill_user_FIO)
+            return
+        FIO = message.text
+        bot.send_message(message.chat.id, 'Введите официальное название вашего вуза, например "МГЮА"')
+        bot.register_next_step_handler(message, fill_user_institute, FIO)
+    except:
+        bot.send_message(message.chat.id, 'Введите ваше ФИО, полностью, в виде текста')
+        bot.register_next_step_handler(message, fill_user_FIO)
 
 
 def fill_user_institute(message, FIO):
-    institute = message.text
-    if institute.upper() == 'МГЮА':
-        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
-        bot.register_next_step_handler(message, fill_user_faculty, FIO, institute.upper())
-    else:
-        bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
-        bot.register_next_step_handler(message, registration, FIO, institute)
+    try:
+        institute = message.text
+        if institute.upper() == 'МГЮА':
+            bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+            bot.register_next_step_handler(message, fill_user_faculty, FIO, institute.upper())
+        else:
+            bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
+            bot.register_next_step_handler(message, registration, FIO, institute)
+    except:
+        bot.send_message(message.chat.id, 'Введите официальное название вашего вуза в виде текста, например "МГЮА"')
+        bot.register_next_step_handler(message, fill_user_institute, FIO)
 
 
 def fill_user_faculty(message, FIO, institute):
-    faculty = message.text.upper()
-    bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
-    bot.register_next_step_handler(message, registration, FIO, institute, faculty)
+    try:    
+        faculty = message.text.upper()
+        bot.send_message(message.chat.id, 'Введите номер курса, на котором вы обучаетесь в данный момент')
+        bot.register_next_step_handler(message, registration, FIO, institute, faculty)
+    except:
+        bot.send_message(message.chat.id, 'Укажите на каком институте вы обучаетесь в виде аббревиатуры, например "ИБП"')
+        bot.register_next_step_handler(message, fill_user_institute, FIO)
 
 
 def registration(message, FIO, institute, faculty=''):
     try: 
         course_num = int(message.text)
-    except ValueError:
+    except:
         bot.send_message(message.chat.id, 'Пожалуйста, введите целое число')
         bot.register_next_step_handler(message, registration, FIO, institute, faculty)
         return
@@ -651,7 +713,7 @@ def registration(message, FIO, institute, faculty=''):
         return
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(btn2, btn3, btn15)
+    markup.add(btn2, btn3, btn15, btn6)
     bot.send_message(message.chat.id, 'Отлично, мы тебя зарегистрировали!', reply_markup=markup)
 
 
