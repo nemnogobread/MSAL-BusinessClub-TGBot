@@ -199,7 +199,7 @@ def func(message):
         inline_markup.add(inline_btn1)
         bot.send_message(message.chat.id, club_info, reply_markup = inline_markup, parse_mode='html')
 
-    elif message.text == '👀 Мероприятия' or message.text == '👉 Выбрать ивент':
+    elif message.text == '👀 Ивенты' or message.text == '👉 Выбрать ивент':
         if events == {}:
             bot.send_message(message.chat.id, 'Пока что доступных мероприятий нет\nЯ напишу тебе, как только они появятся!')
         else:
