@@ -261,7 +261,7 @@ def func(message):
         try:
             conn = sqlite3.connect('database.sql')
             cur = conn.cursor()
-            cur.execute('DROP TABLE IF EXISTS %s' % (event_name))
+            cur.execute('DROP TABLE IF EXISTS `%s`' % (event_name))
             conn.commit()
             cur.close()
             conn.close()
@@ -417,6 +417,14 @@ def add_event_name(message):
     global event_name
     if type(message.text) != str:
         bot.send_message(message.chat.id, 'Пожалуйста, введи название в виде текста')
+        bot.register_next_step_handler(message, add_event_name)
+        return
+    if len(message.text) >= 30:
+        bot.send_message(message.chat.id, 'Пожалуйста, введи более короткое название')
+        bot.register_next_step_handler(message, add_event_name)
+        return
+    if message.text[0] == '/':
+        bot.send_message(message.chat.id, 'Пожалуйста, введи другое название, без слеша')
         bot.register_next_step_handler(message, add_event_name)
         return
     event_name = message.text
