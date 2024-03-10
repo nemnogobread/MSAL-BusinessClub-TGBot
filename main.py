@@ -346,7 +346,8 @@ def callback_message(callback):
             inline_markup.add(types.InlineKeyboardButton('Я буду', callback_data='register_on_event_callback'))
             src = events[event_name][1]
             with open(src, 'rb') as photo:
-                bot.send_photo(callback.message.chat.id, photo, caption=events[event_name][0], reply_markup=inline_markup)
+                bot.send_photo(callback.message.chat.id, photo, caption=event_name)
+                bot.send_message(callback.message.chat.id, events[event_name][0])
             bot.answer_callback_query(callback.id)
             if is_admin(callback.message.chat.id):
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -447,12 +448,16 @@ def add_event_photo(message, event_name):
         events[event_name][1] = src
         bot.send_message(message.chat.id, f'Фото добавлено. Вот полное описание:')
         with open(src, 'rb') as photo:
-            bot.send_photo(message.chat.id, photo, caption=events[event_name][0])
+            bot.send_photo(message.chat.id, photo, caption=event_name)
+            bot.send_message(message.chat.id, events[event_name][0])
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn16, btn17, btn18)
         bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
         bot.register_next_step_handler(message, change_event, event_name)
+    except telebot.apihelper.ApiTelegramException as error:
+        bot.send_message(message.chat.id, f'{error}\nОписание ивента слишком большое ({len(events[event_name][0])}), опишите мероприятие покороче:')
+        bot.register_next_step_handler(message, add_event_description, event_name)
     except Exception as error:
         bot.reply_to(message, f'{error}\nПожалуйста, скиньте постер в виде файла')
         bot.register_next_step_handler(message, add_event_photo, event_name)
@@ -488,7 +493,8 @@ def change_event_description(message, event_name):
         events[event_name][0] = event_description
         src = events[event_name][1]
         with open(src, 'rb') as photo:
-            bot.send_photo(message.chat.id, photo, caption=events[event_name][0])
+            bot.send_photo(message.chat.id, photo, caption=event_name)
+            bot.send_message(message.chat.id, events[event_name][0])
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn16, btn17, btn18)
         bot.send_message(message.chat.id, 'Всё верно?', reply_markup=markup)
@@ -508,7 +514,8 @@ def change_event_photo(message, event_name):
         
         bot.send_message(message.chat.id, f'Фото добавлено. Вот полное описание:')
         with open(src, 'rb') as photo:
-            bot.send_photo(message.chat.id, photo, caption=events[event_name][0])
+            bot.send_photo(message.chat.id, photo, caption=event_name)
+            bot.send_message(message.chat.id, events[event_name][0])
         
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(btn16, btn17, btn18)
