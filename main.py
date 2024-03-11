@@ -347,7 +347,7 @@ def callback_message(callback):
             src = events[event_name][1]
             with open(src, 'rb') as photo:
                 bot.send_photo(callback.message.chat.id, photo, caption=event_name)
-                bot.send_message(callback.message.chat.id, events[event_name][0])
+                bot.send_message(callback.message.chat.id, events[event_name][0], reply_markup=inline_markup)
             bot.answer_callback_query(callback.id)
             if is_admin(callback.message.chat.id):
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
