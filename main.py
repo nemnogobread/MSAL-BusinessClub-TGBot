@@ -44,7 +44,7 @@ public_club_info= f"""<b>⚡️ Бизнес-клуб МГЮА - Люди. Зн�
 
 user_agreement = f""" """
 
-bot = telebot.TeleBot(token='6624656705:AAEzIo8t1mZAyhcpALT-hzjXQGVBxua5F-Q', skip_pending=True)
+bot = telebot.TeleBot(token=os.getenv(&quot;MY_KEY&quot;), skip_pending=True)
 
 btn1 = types.KeyboardButton('📲 Зарегистрироваться')
 btn2 = types.KeyboardButton('📋 Мои данные')

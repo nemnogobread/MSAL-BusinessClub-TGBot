@@ -4,3 +4,5 @@
 /venv
 test.py
 /temp.xlsx
+database.sql
+.env
